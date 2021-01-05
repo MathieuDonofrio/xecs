@@ -98,7 +98,7 @@ public:
   void storage_action(const entity_type entity, const Action action);
 
   template<size_t I = 0, typename Func>
-  void each(Func func);
+  void for_each(Func func);
 
   template<size_t I = 0>
   bool contains(const entity_type entity) const;
@@ -148,7 +148,7 @@ void basic_view<Registry, Components...>::for_each(const Func func)
       std::apply(func, std::make_tuple(*it, it.template get<Components>()...));
     }
 
-    each<I + 1>(func);
+    for_each<I + 1>(func);
   }
   else
     (void)func; // Suppress warning

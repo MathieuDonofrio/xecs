@@ -461,7 +461,7 @@ void Iterate_NoComponents()
 
   BEGIN_BENCHMARK(Iterate_NoComponents);
 
-  v.each([](auto entity)
+  v.for_each([](auto entity)
     { benchmark::do_not_optimize(entity); });
 
   END_BENCHMARK(iterations, 1);
@@ -488,7 +488,7 @@ void Iterate_OneComponent()
 
   BEGIN_BENCHMARK(Iterate_OneComponent);
 
-  v.each([](auto entity, auto& position)
+  v.for_each([](auto entity, auto& position)
     {
       benchmark::do_not_optimize(entity);
       benchmark::do_not_optimize(position);
@@ -518,7 +518,7 @@ void Iterate_TwoComponents()
 
   BEGIN_BENCHMARK(Iterate_TwoComponents);
 
-  v.each([](auto entity, auto& position, auto& velocity)
+  v.for_each([](auto entity, auto& position, auto& velocity)
     {
       benchmark::do_not_optimize(entity);
       benchmark::do_not_optimize(position);
@@ -549,7 +549,7 @@ void Iterate_ThreeComponents()
 
   BEGIN_BENCHMARK(Iterate_ThreeComponents);
 
-  v.each([](auto entity, auto& position, auto& velocity, auto& color)
+  v.for_each([](auto entity, auto& position, auto& velocity, auto& color)
     {
       benchmark::do_not_optimize(entity);
       benchmark::do_not_optimize(position);
@@ -611,7 +611,7 @@ void Iterate_TenComponents()
 
   BEGIN_BENCHMARK(Iterate_TenComponents);
 
-  v.each([](auto entity, auto& c0, auto& c1, auto& c2, auto& c3, auto& c4, auto& c5, auto& c6, auto& c7, auto& c8, auto& c9)
+  v.for_each([](auto entity, auto& c0, auto& c1, auto& c2, auto& c3, auto& c4, auto& c5, auto& c6, auto& c7, auto& c8, auto& c9)
     {
       benchmark::do_not_optimize(entity);
       benchmark::do_not_optimize(c0);
@@ -673,7 +673,7 @@ void Iterate_TenArchetypesNoComponents()
 
   BEGIN_BENCHMARK(Iterate_TenArchetypesNoComponents);
 
-  v.each([](auto entity)
+  v.for_each([](auto entity)
     { benchmark::do_not_optimize(entity); });
 
   END_BENCHMARK(iterations, 1);
