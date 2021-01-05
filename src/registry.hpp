@@ -53,12 +53,6 @@ public:
 
   void optimize();
 
-  template<typename Archetype>
-  const storage<entity_type, Archetype>& access() const { return std::get<storage<entity_type, Archetype>>(_pool); }
-
-  template<typename Archetype>
-  storage<entity_type, Archetype>& access() { return std::get<storage<entity_type, Archetype>>(_pool); }
-
   template<typename... Components>
   auto view() const { return basic_view<registry_type, Components...> { const_cast<registry_type*>(this) }; }
 
@@ -66,12 +60,24 @@ public:
   auto view() { return basic_view<registry_type, Components...> { this }; }
 
   template<typename... Components>
+  bool has_components(const entity_type entity) const { return view<Components...>().contains(entity); }
+
+  template<typename... Components>
   size_t size() const { return view<Components...>().size(); }
 
 private:
+  friend basic_view;
+
   template<size_t I = 0>
   void setup_shared_memory();
 
+  template<typename Archetype>
+  const storage<entity_type, Archetype>& access() const { return std::get<storage<entity_type, Archetype>>(_pool); }
+
+  template<typename Archetype>
+  storage<entity_type, Archetype>& access() { return std::get<storage<entity_type, Archetype>>(_pool); }
+
+private:
   manager_type _manager;
   pool_type _pool;
   shared_type _shared;
@@ -93,6 +99,9 @@ public:
 
   template<size_t I = 0, typename Func>
   void each(Func func);
+
+  template<size_t I = 0>
+  bool contains(const entity_type entity) const;
 
   template<size_t I = 0>
   size_t size() const;
@@ -126,7 +135,7 @@ void basic_view<Registry, Components...>::storage_action(const entity_type entit
 
 template<typename Registry, typename... Components>
 template<size_t I, typename Func>
-void basic_view<Registry, Components...>::each(const Func func)
+void basic_view<Registry, Components...>::for_each(const Func func)
 {
   using current = typename archetype_at<I, archetype_list_type>::type;
 
@@ -143,6 +152,19 @@ void basic_view<Registry, Components...>::each(const Func func)
   }
   else
     (void)func; // Suppress warning
+}
+
+template<typename Registry, typename... Components>
+template<size_t I>
+bool basic_view<Registry, Components...>::contains(const entity_type entity) const
+{
+  using current = typename archetype_at<I, archetype_list_type>::type;
+
+  if constexpr (I == archetype_list_type::size::value) return false;
+  else if (_registry->template access<current>().contains(entity))
+    return true;
+  else
+    return contains<I + 1>(entity);
 }
 
 template<typename Registry, typename... Components>
@@ -211,4 +233,5 @@ void registry<Entity, archetype_list<Archetypes...>>::optimize()
   _manager.swap();
   _manager.shrink_to_fit();
 }
+
 } // namespace ecs
