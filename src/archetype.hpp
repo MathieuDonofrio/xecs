@@ -139,6 +139,19 @@ struct archetype_list
   };
 
   template<typename... Components>
+  struct contains_with : std::false_type
+  {};
+
+  template<typename... Components>
+  struct find_for
+  {
+    using type = archetype_list<>;
+  };
+
+  template<typename... Components>
+  using find_for_t = typename find_for<Components...>::type;
+
+  template<typename... Components>
   struct purge_for
   {
     using type = archetype_list<>;
@@ -162,6 +175,36 @@ struct archetype_list<T, Archetypes...>
   template<typename Archetype>
   struct contains : std::disjunction<std::is_same<Archetype, T>, std::is_same<Archetype, Archetypes>...>
   {};
+
+  template<typename... Components>
+  struct contains_with
+  {
+  private:
+    template<typename Archetype>
+    using check = typename std::conjunction<
+      typename std::bool_constant<Archetype::size::value == sizeof...(Components)>::type,
+      typename Archetype::template contains_all<Components...>::type
+    >::type;
+
+  public:
+    static constexpr bool value = std::disjunction<check<T>, check<Archetypes>...>::value;
+  };
+
+  template<typename... Components>
+  struct find_for
+  {
+  private:
+    using next = typename archetype_list<Archetypes...>::template find_for<Components...>::type;
+
+  public:
+    using type = typename std::conditional<
+      T::template contains_all<Components...>::value,
+      T,
+      next>::type;
+  };
+
+  template<typename... Components>
+  using find_for_t = typename find_for<Components...>::type;
 
   template<typename... Components>
   struct purge_for
@@ -193,6 +236,16 @@ static_assert(archetype_list<>::contains<archetype<int>>::value == false, "");
 static_assert(archetype_list<archetype<int>>::contains<archetype<int>>::value == true, "");
 static_assert(archetype_list<archetype<float>>::contains<archetype<int>>::value == false, "");
 static_assert(archetype_list<archetype<float, int>, archetype<bool, float>>::contains<archetype<bool, float>>::value == true, "");
+
+static_assert(archetype_list<>::contains_with<int>::value == false, "");
+static_assert(archetype_list<archetype<int>>::contains_with<int>::value == true, "");
+static_assert(archetype_list<archetype<float, int>>::contains_with<int>::value == false, "");
+static_assert(archetype_list<archetype<float, int>>::contains_with<float, int>::value == true, "");
+static_assert(archetype_list<archetype<float, int>>::contains_with<int, float>::value == true, "");
+static_assert(archetype_list<archetype<float, bool>, archetype<float>>::contains_with<int, float>::value == false, "");
+static_assert(archetype_list<archetype<float, bool>, archetype<float, int>>::contains_with<int, float>::value == true, "");
+static_assert(archetype_list<archetype<float, int>>::contains_with<float, int, bool>::value == false, "");
+static_assert(archetype_list<archetype<bool, float, int>>::contains_with<float, int, bool>::value == true, "");
 
 template<size_t I, typename List>
 struct archetype_at;

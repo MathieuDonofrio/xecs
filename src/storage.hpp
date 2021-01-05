@@ -97,7 +97,8 @@ public:
 
   void assure(const size_type page);
 
-  void insert(const entity_type value, Components&&... types);
+  template<typename... IncludedComponents>
+  void insert(const entity_type value, IncludedComponents&&... components);
   void erase(const entity_type value);
   bool contains(const entity_type value) const;
 
@@ -249,7 +250,8 @@ void storage<Entity, archetype<Components...>>::assure(const size_type page)
 }
 
 template<typename Entity, typename... Components>
-void storage<Entity, archetype<Components...>>::insert(const entity_type value, Components&&... types)
+template<typename... IncludedComponents>
+void storage<Entity, archetype<Components...>>::insert(const entity_type value, IncludedComponents&&... components)
 {
   // undefined behaviour if the entity already exists
 
@@ -259,7 +261,7 @@ void storage<Entity, archetype<Components...>>::insert(const entity_type value, 
 
   _dense[_size] = value;
 
-  ((access<Components>()[_size] = std::move(types)), ...);
+  ((access<IncludedComponents>()[_size] = std::move(components)), ...);
 
   (*_sparse)[p][_sparse->offset(value)] = static_cast<entity_type>(_size++);
 }

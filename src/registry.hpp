@@ -202,12 +202,14 @@ template<typename Entity, typename... Archetypes>
 template<typename... Components>
 Entity registry<Entity, archetype_list<Archetypes...>>::create(Components&&... components)
 {
-  static_assert(archetype_list<Archetypes...>::template contains<archetype<Components...>>::value,
+  static_assert(archetype_list<Archetypes...>::template contains_with<Components...>::value,
     "Registry does not contain suitable archetype for provided components");
+
+  using current = typename archetype_list<Archetypes...>::template find_for_t<Components...>;
 
   const entity_type entity = _manager.generate();
 
-  access<archetype<Components...>>().insert(entity, std::move(components)...);
+  access<current>().insert(entity, std::move(components)...);
 
   return entity;
 }

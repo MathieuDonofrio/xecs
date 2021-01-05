@@ -205,7 +205,7 @@ TEST(Storage, Insert_TriggerGrowth)
 TEST(Storage, ShrinkToFit__UnderMinimumCapacity_DontShrink)
 {
   using entity_type = unsigned int;
-  using storage_type = storage<entity_type, archetype<int>>;
+  using storage_type = storage<entity_type, archetype<unsigned int>>;
 
   storage_type storage;
 
@@ -235,7 +235,7 @@ TEST(Storage, ShrinkToFit__UnderMinimumCapacity_DontShrink)
 TEST(Storage, ShrinkToFit_MemoryOverhead)
 {
   using entity_type = unsigned int;
-  using storage_type = storage<entity_type, archetype<int>>;
+  using storage_type = storage<entity_type, archetype<unsigned int>>;
 
   storage_type storage;
 
@@ -351,7 +351,7 @@ TEST(Storage, Random)
 TEST(Storage, Iterator_CorrectIterations)
 {
   using entity_type = unsigned int;
-  using storage_type = storage<entity_type, archetype<int>>;
+  using storage_type = storage<entity_type, archetype<unsigned int>>;
 
   storage_type storage;
 
@@ -426,7 +426,7 @@ TEST(StorageWithData, Insert_TwoComponentsReinsertedAfterErase)
 TEST(StorageWithData, Insert_TriggerGrowth)
 {
   using entity_type = unsigned int;
-  using storage_type = storage<entity_type, archetype<int>>;
+  using storage_type = storage<entity_type, archetype<unsigned int>>;
 
   storage_type storage;
 
@@ -443,7 +443,7 @@ TEST(StorageWithData, Insert_TriggerGrowth)
   for (entity_type i = 0; i < amount; i++)
   {
     ASSERT_TRUE(storage.contains(i));
-    ASSERT_EQ(storage.get<int>(i), i);
+    ASSERT_EQ(storage.get<unsigned int>(i), i);
   }
 
   ASSERT_FALSE(storage.contains(amount));
