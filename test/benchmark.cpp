@@ -35,8 +35,8 @@ struct Component
 void Create_NoComponents()
 {
   using entity_type = unsigned int;
-  using registered_archetypes = archetype_list<
-    archetype<>>;
+  using registered_archetypes = registry_builder::add<
+    archetype<>>::build;
 
   registry<entity_type, registered_archetypes> registry;
 
@@ -60,8 +60,8 @@ void Create_NoComponents()
 void Create_OneComponent()
 {
   using entity_type = unsigned int;
-  using registered_archetypes = archetype_list<
-    archetype<Position>>;
+  using registered_archetypes = registry_builder::add<
+    archetype<Position>>::build;
 
   registry<entity_type, registered_archetypes> registry;
 
@@ -82,8 +82,8 @@ void Create_OneComponent()
 void Create_TwoComponents()
 {
   using entity_type = unsigned int;
-  using registered_archetypes = archetype_list<
-    archetype<Position, Velocity>>;
+  using registered_archetypes = registry_builder::add<
+    archetype<Position, Velocity>>::build;
 
   registry<entity_type, registered_archetypes> registry;
 
@@ -104,8 +104,8 @@ void Create_TwoComponents()
 void Create_ThreeComponents()
 {
   using entity_type = unsigned int;
-  using registered_archetypes = archetype_list<
-    archetype<Position, Velocity, Color>>;
+  using registered_archetypes = registry_builder::add<
+    archetype<Position, Velocity, Color>>::build;
 
   registry<entity_type, registered_archetypes> registry;
 
@@ -126,8 +126,8 @@ void Create_ThreeComponents()
 void Destroy_NoComponents()
 {
   using entity_type = unsigned int;
-  using registered_archetypes = archetype_list<
-    archetype<>>;
+  using registered_archetypes = registry_builder::add<
+    archetype<>>::build;
 
   registry<entity_type, registered_archetypes> registry;
 
@@ -155,8 +155,8 @@ void Destroy_NoComponents()
 void Destroy_OneComponent()
 {
   using entity_type = unsigned int;
-  using registered_archetypes = archetype_list<
-    archetype<Position>>;
+  using registered_archetypes = registry_builder::add<
+    archetype<Position>>::build;
 
   registry<entity_type, registered_archetypes> registry;
 
@@ -181,8 +181,8 @@ void Destroy_OneComponent()
 void Destroy_TwoComponents()
 {
   using entity_type = unsigned int;
-  using registered_archetypes = archetype_list<
-    archetype<Position, Velocity>>;
+  using registered_archetypes = registry_builder::add<
+    archetype<Position, Velocity>>::build;
 
   registry<entity_type, registered_archetypes> registry;
 
@@ -207,8 +207,8 @@ void Destroy_TwoComponents()
 void Destroy_ThreeComponents()
 {
   using entity_type = unsigned int;
-  using registered_archetypes = archetype_list<
-    archetype<Position, Velocity, Color>>;
+  using registered_archetypes = registry_builder::add<
+    archetype<Position, Velocity, Color>>::build;
 
   registry<entity_type, registered_archetypes> registry;
 
@@ -233,9 +233,9 @@ void Destroy_ThreeComponents()
 void Destroy_TwoArchetypes()
 {
   using entity_type = unsigned int;
-  using registered_archetypes = archetype_list<
-    archetype<Position>,
-    archetype<Velocity>>;
+  using registered_archetypes = registry_builder::
+    add<archetype<Position>>::
+      add<archetype<Velocity>>::build;
 
   registry<entity_type, registered_archetypes> registry;
 
@@ -265,10 +265,10 @@ void Destroy_TwoArchetypes()
 void Destroy_ThreeArchetypes()
 {
   using entity_type = unsigned int;
-  using registered_archetypes = archetype_list<
-    archetype<Position>,
-    archetype<Velocity>,
-    archetype<Color>>;
+  using registered_archetypes = registry_builder::
+    add<archetype<Position>>::
+      add<archetype<Velocity>>::
+        add<archetype<Color>>::build;
 
   registry<entity_type, registered_archetypes> registry;
 
@@ -301,17 +301,17 @@ void Destroy_ThreeArchetypes()
 void Destroy_TenArchetypesTwoComponents()
 {
   using entity_type = unsigned int;
-  using registered_archetypes = archetype_list<
-    archetype<Position, Component<0>>,
-    archetype<Velocity, Component<1>>,
-    archetype<Position, Component<2>>,
-    archetype<Velocity, Component<3>>,
-    archetype<Position, Component<4>>,
-    archetype<Velocity, Component<5>>,
-    archetype<Position, Component<6>>,
-    archetype<Velocity, Component<7>>,
-    archetype<Position, Component<8>>,
-    archetype<Velocity, Component<9>>>;
+  using registered_archetypes = registry_builder::
+    add<archetype<Position, Component<0>>>::
+      add<archetype<Velocity, Component<1>>>::
+        add<archetype<Position, Component<2>>>::
+          add<archetype<Velocity, Component<3>>>::
+            add<archetype<Position, Component<4>>>::
+              add<archetype<Velocity, Component<5>>>::
+                add<archetype<Position, Component<6>>>::
+                  add<archetype<Velocity, Component<7>>>::
+                    add<archetype<Position, Component<8>>>::
+                      add<archetype<Velocity, Component<9>>>::build;
 
   registry<entity_type, registered_archetypes> registry;
 
@@ -360,17 +360,17 @@ void Destroy_TenArchetypesTwoComponents()
 void Destroy_TenArchetypesTwoComponents_KnownTypes()
 {
   using entity_type = unsigned int;
-  using registered_archetypes = archetype_list<
-    archetype<Position, Component<0>>,
-    archetype<Velocity, Component<1>>,
-    archetype<Position, Component<2>>,
-    archetype<Velocity, Component<3>>,
-    archetype<Position, Component<4>>,
-    archetype<Velocity, Component<5>>,
-    archetype<Position, Component<6>>,
-    archetype<Velocity, Component<7>>,
-    archetype<Position, Component<8>>,
-    archetype<Velocity, Component<9>>>;
+  using registered_archetypes = registry_builder::
+    add<archetype<Position, Component<0>>>::
+    add<archetype<Velocity, Component<1>>>::
+    add<archetype<Position, Component<2>>>::
+    add<archetype<Velocity, Component<3>>>::
+    add<archetype<Position, Component<4>>>::
+    add<archetype<Velocity, Component<5>>>::
+    add<archetype<Position, Component<6>>>::
+    add<archetype<Velocity, Component<7>>>::
+    add<archetype<Position, Component<8>>>::
+    add<archetype<Velocity, Component<9>>>::build;
 
   registry<entity_type, registered_archetypes> registry;
 
@@ -445,8 +445,8 @@ void Iterate_STD_Vector_AsComparaison()
 void Iterate_NoComponents()
 {
   using entity_type = unsigned int;
-  using registered_archetypes = archetype_list<
-    archetype<>>;
+  using registered_archetypes = registry_builder::add<
+    archetype<>>::build;
 
   registry<entity_type, registered_archetypes> registry;
 
@@ -472,8 +472,8 @@ void Iterate_NoComponents()
 void Iterate_OneComponent()
 {
   using entity_type = unsigned int;
-  using registered_archetypes = archetype_list<
-    archetype<Position>>;
+  using registered_archetypes = registry_builder::add<
+    archetype<Position>>::build;
 
   registry<entity_type, registered_archetypes> registry;
 
@@ -502,8 +502,8 @@ void Iterate_OneComponent()
 void Iterate_TwoComponents()
 {
   using entity_type = unsigned int;
-  using registered_archetypes = archetype_list<
-    archetype<Position, Velocity>>;
+  using registered_archetypes = registry_builder::add<
+    archetype<Position, Velocity>>::build;
 
   registry<entity_type, registered_archetypes> registry;
 
@@ -533,8 +533,8 @@ void Iterate_TwoComponents()
 void Iterate_ThreeComponents()
 {
   using entity_type = unsigned int;
-  using registered_archetypes = archetype_list<
-    archetype<Position, Velocity, Color>>;
+  using registered_archetypes = registry_builder::add<
+    archetype<Position, Velocity, Color>>::build;
 
   registry<entity_type, registered_archetypes> registry;
 
@@ -565,7 +565,7 @@ void Iterate_ThreeComponents()
 void Iterate_TenComponents()
 {
   using entity_type = unsigned int;
-  using registered_archetypes = archetype_list<
+  using registered_archetypes = registry_builder::add<
     archetype<
       Component<0>,
       Component<1>,
@@ -576,7 +576,7 @@ void Iterate_TenComponents()
       Component<6>,
       Component<7>,
       Component<8>,
-      Component<9>>>;
+      Component<9>>>::build;
 
   registry<entity_type, registered_archetypes> registry;
 
@@ -634,17 +634,17 @@ void Iterate_TenComponents()
 void Iterate_TenArchetypesNoComponents()
 {
   using entity_type = unsigned int;
-  using registered_archetypes = archetype_list<
-    archetype<Component<0>>,
-    archetype<Component<1>>,
-    archetype<Component<2>>,
-    archetype<Component<3>>,
-    archetype<Component<4>>,
-    archetype<Component<5>>,
-    archetype<Component<6>>,
-    archetype<Component<7>>,
-    archetype<Component<8>>,
-    archetype<Component<9>>>;
+  using registered_archetypes = registry_builder::
+    add<archetype<Component<0>>>::
+    add<archetype<Component<1>>>::
+    add<archetype<Component<2>>>::
+    add<archetype<Component<3>>>::
+    add<archetype<Component<4>>>::
+    add<archetype<Component<5>>>::
+    add<archetype<Component<6>>>::
+    add<archetype<Component<7>>>::
+    add<archetype<Component<8>>>::
+    add<archetype<Component<9>>>::build;
 
   registry<entity_type, registered_archetypes> registry;
 
