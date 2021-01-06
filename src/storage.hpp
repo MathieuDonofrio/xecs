@@ -245,8 +245,8 @@ void storage<Entity, archetype<Components...>>::assure(const size_type page)
 {
   if (_size == _capacity)
   {
-    // There may be a better solutions than doubling the capacity here
-    _capacity <<= 1;
+    // This is essentially _capacity * 1.5 + a small linear amount
+    _capacity = (_capacity * 3) / 2 + 8;
 
     _dense = static_cast<dense_type>(std::realloc(_dense, _capacity * sizeof(entity_type)));
     ((access<Components>() = static_cast<Components*>(std::realloc(access<Components>(), _capacity * sizeof(Components)))), ...);

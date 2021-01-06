@@ -84,9 +84,12 @@ void entity_manager<Entity>::release(const entity_type entity)
   if (_stack_reusable < stack_capacity) _stack_buffer[_stack_reusable++] = entity;
   else
   {
+    // Heap resizing should not happen very often
     if (_heap_reusable == _heap_capacity)
     {
-      _heap_capacity <<= 1;
+      // Grow by a factor of 1.25
+      // This is ok since we know the heap capacity starts off as a large amount
+      _heap_capacity = (_heap_capacity * 5) / 3;
       _heap_buffer = static_cast<heap_buffer_type>(std::realloc(_heap_buffer, _heap_capacity * sizeof(entity_type)));
     }
     _heap_buffer[_heap_reusable++] = entity;
