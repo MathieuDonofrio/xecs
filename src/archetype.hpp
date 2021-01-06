@@ -19,7 +19,7 @@ struct find_index<T, std::tuple<U, Types...>> : std::integral_constant<size_t, 1
 {};
 
 template<typename Type, typename Tuple>
-constexpr Type& get(const Tuple& tuple) { return std::get<find_index<Type, Tuple>::value>(tuple); }
+inline constexpr Type& get(const Tuple& tuple) { return std::get<find_index<Type, Tuple>::value>(tuple); }
 } // namespace std
 
 namespace ecs
@@ -194,5 +194,4 @@ namespace internal
 } // namespace internal
 
 using registry_builder = internal::registry_builder<>;
-
 } // namespace ecs

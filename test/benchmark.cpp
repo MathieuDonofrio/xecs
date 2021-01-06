@@ -362,15 +362,15 @@ void Destroy_TenArchetypesTwoComponents_KnownTypes()
   using entity_type = unsigned int;
   using registered_archetypes = registry_builder::
     add<archetype<Position, Component<0>>>::
-    add<archetype<Velocity, Component<1>>>::
-    add<archetype<Position, Component<2>>>::
-    add<archetype<Velocity, Component<3>>>::
-    add<archetype<Position, Component<4>>>::
-    add<archetype<Velocity, Component<5>>>::
-    add<archetype<Position, Component<6>>>::
-    add<archetype<Velocity, Component<7>>>::
-    add<archetype<Position, Component<8>>>::
-    add<archetype<Velocity, Component<9>>>::build;
+      add<archetype<Velocity, Component<1>>>::
+        add<archetype<Position, Component<2>>>::
+          add<archetype<Velocity, Component<3>>>::
+            add<archetype<Position, Component<4>>>::
+              add<archetype<Velocity, Component<5>>>::
+                add<archetype<Position, Component<6>>>::
+                  add<archetype<Velocity, Component<7>>>::
+                    add<archetype<Position, Component<8>>>::
+                      add<archetype<Velocity, Component<9>>>::build;
 
   registry<entity_type, registered_archetypes> registry;
 
@@ -636,15 +636,15 @@ void Iterate_TenArchetypesNoComponents()
   using entity_type = unsigned int;
   using registered_archetypes = registry_builder::
     add<archetype<Component<0>>>::
-    add<archetype<Component<1>>>::
-    add<archetype<Component<2>>>::
-    add<archetype<Component<3>>>::
-    add<archetype<Component<4>>>::
-    add<archetype<Component<5>>>::
-    add<archetype<Component<6>>>::
-    add<archetype<Component<7>>>::
-    add<archetype<Component<8>>>::
-    add<archetype<Component<9>>>::build;
+      add<archetype<Component<1>>>::
+        add<archetype<Component<2>>>::
+          add<archetype<Component<3>>>::
+            add<archetype<Component<4>>>::
+              add<archetype<Component<5>>>::
+                add<archetype<Component<6>>>::
+                  add<archetype<Component<7>>>::
+                    add<archetype<Component<8>>>::
+                      add<archetype<Component<9>>>::build;
 
   registry<entity_type, registered_archetypes> registry;
 

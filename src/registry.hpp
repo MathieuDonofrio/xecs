@@ -19,7 +19,7 @@ namespace ecs
 template<typename Registry, typename... Components>
 class basic_view;
 
-template<typename Entity, typename ArchetypeList>
+template<typename Entity, typename ArchetypeRegistry>
 class registry;
 
 template<typename Entity, typename... Archetypes>
@@ -31,7 +31,7 @@ public:
   using registry_type = registry<entity_type, archetype_list_type>;
   using manager_type = entity_manager<entity_type>;
   using pool_type = std::tuple<storage<entity_type, Archetypes>...>;
-  using shared_type = std::shared_ptr<sparse_array<entity_type>>;
+  using shared_type = std::shared_ptr<internal::sparse_array<entity_type>>;
 
   static_assert(std::numeric_limits<entity_type>::is_integer && !std::numeric_limits<entity_type>::is_signed,
     "Entity must be an unsigned integer");
@@ -87,12 +87,12 @@ template<typename Registry, typename... Components>
 class basic_view
 {
 public:
-  using registry_type = Registry;
-  using entity_type = typename registry_type::entity_type;
-  using archetype_list_type = typename prune_for_t<registry_type::template archetype_list_type, Components...>;
+  using Registry_type = Registry;
+  using entity_type = typename Registry_type::entity_type;
+  using archetype_list_type = typename prune_for_t<Registry_type::template archetype_list_type, Components...>;
 
 public:
-  basic_view(registry_type* registry) : _registry { registry } {}
+  basic_view(Registry_type* registry) : _registry { registry } {}
 
   template<size_t I = 0, typename Action>
   void storage_action(const entity_type entity, const Action action);
@@ -107,7 +107,7 @@ public:
   size_t size() const;
 
 private:
-  registry_type* _registry;
+  Registry_type* _registry;
 };
 
 template<typename Registry, typename... Components>
@@ -116,10 +116,7 @@ void basic_view<Registry, Components...>::storage_action(const entity_type entit
 {
   using current = typename at_t<I, archetype_list_type>;
 
-  if constexpr (I == size_v<archetype_list_type>)
-  {
-    throw std::invalid_argument("Entity does not exist!");
-  }
+  if constexpr (I == size_v<archetype_list_type>) throw std::invalid_argument("Entity does not exist!");
   else
   {
     auto& storage = _registry->template access<current>();
@@ -128,7 +125,6 @@ void basic_view<Registry, Components...>::storage_action(const entity_type entit
     else
       storage_action<I + 1, Action>(entity, action);
   }
-
   (void)entity; // Suppress warning
   (void)action; // Suppress warning
 }
@@ -181,7 +177,7 @@ size_t basic_view<Registry, Components...>::size() const
 template<typename Entity, typename... Archetypes>
 registry<Entity, list<Archetypes...>>::registry()
 {
-  _shared = std::make_shared<sparse_array<entity_type>>();
+  _shared = std::make_shared<internal::sparse_array<entity_type>>();
   setup_shared_memory();
 }
 
@@ -202,7 +198,7 @@ template<typename Entity, typename... Archetypes>
 template<typename... Components>
 Entity registry<Entity, list<Archetypes...>>::create(Components&&... components)
 {
-  static_assert(size_v<prune_for_t<list<Archetypes...>, Components...>> > 0, 
+  static_assert(size_v<prune_for_t<list<Archetypes...>, Components...>> > 0,
     "Registry does not contain suitable archetype for provided components");
 
   using current = typename find_for_t<list<Archetypes...>, Components...>;
@@ -218,7 +214,7 @@ template<typename Entity, typename... Archetypes>
 template<typename... Components>
 void registry<Entity, list<Archetypes...>>::destroy(const entity_type entity)
 {
-  static_assert(size_v<prune_for_t<list<Archetypes...>, Components...>> > 0, 
+  static_assert(size_v<prune_for_t<list<Archetypes...>, Components...>> > 0,
     "Registry does not contain suitable archetype for provided components");
 
   view<Components...>().storage_action(entity, [entity](auto& storage)

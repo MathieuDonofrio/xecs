@@ -452,10 +452,10 @@ TEST(StorageWithData, Insert_TriggerGrowth)
 TEST(StorageSharedSparse, IsShared_TwoStoragesInsertSingle_ContainsBoth)
 {
   using entity_type = unsigned int;
-  using sparse_type = std::shared_ptr<sparse_array<entity_type>>;
+  using sparse_type = std::shared_ptr<internal::sparse_array<entity_type>>;
   using storage_type = storage<entity_type, archetype<>>;
 
-  sparse_type shared = std::make_shared<sparse_array<entity_type>>();
+  sparse_type shared = std::make_shared<internal::sparse_array<entity_type>>();
 
   storage_type storage1;
   storage_type storage2;
@@ -479,10 +479,10 @@ TEST(StorageSharedSparse, IsShared_TwoStoragesInsertSingle_ContainsBoth)
 TEST(StorageSharedSparse, IsShared_TwoStoragesInsertSingle_UsingSharedMemory)
 {
   using entity_type = unsigned int;
-  using sparse_type = std::shared_ptr<sparse_array<entity_type>>;
+  using sparse_type = std::shared_ptr<internal::sparse_array<entity_type>>;
   using storage_type = storage<entity_type, archetype<>>;
 
-  sparse_type shared = std::make_shared<sparse_array<entity_type>>();
+  sparse_type shared = std::make_shared<internal::sparse_array<entity_type>>();
 
   storage_type storage1;
   storage_type storage2;
