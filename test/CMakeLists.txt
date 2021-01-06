@@ -23,7 +23,7 @@ target_compile_features(gtest_main PUBLIC cxx_std_17)
 target_compile_features(gmock PUBLIC cxx_std_17)
 target_compile_features(gmock_main PUBLIC cxx_std_17)
 
-add_executable(tests tests.cpp storage_tests.cpp entity_manager_tests.cpp)
+add_executable(tests tests.cpp archetype_tests.cpp storage_tests.cpp entity_manager_tests.cpp)
 target_link_libraries(tests PRIVATE ECS GTest::Main Threads::Threads)
 add_test(NAME tests COMMAND tests)
 
