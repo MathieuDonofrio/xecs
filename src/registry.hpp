@@ -54,25 +54,25 @@ public:
   void optimize();
 
   template<typename... Components>
-  bool has_components(const entity_type entity) const { return view<Components...>().contains(entity); }
+  void set(const entity_type entity, Components&&... components) { return view<Components...>().set(entity, components...); }
 
   template<typename... Components>
-  auto view() const { return basic_view<registry_type, Components...> { const_cast<registry_type*>(this) }; }
+  bool has(const entity_type entity) { return view<Components...>().contains(entity); }
+
+  template<typename Component>
+  Component& get(const entity_type entity) { return view<Component>()::template get<Component>(); }
 
   template<typename... Components>
   auto view() { return basic_view<registry_type, Components...> { this }; }
 
   template<typename... Components>
-  size_t size() const { return view<Components...>().size(); }
+  size_t size() { return view<Components...>().size(); }
 
 private:
   friend basic_view;
 
   template<size_t I = 0>
   void setup_shared_memory();
-
-  template<typename Archetype>
-  const storage<entity_type, Archetype>& access() const { return std::get<storage<entity_type, Archetype>>(_pool); }
 
   template<typename Archetype>
   storage<entity_type, Archetype>& access() { return std::get<storage<entity_type, Archetype>>(_pool); }
@@ -101,6 +101,12 @@ public:
   void erase(const entity_type entity);
 
   template<size_t I = 0>
+  void set(const entity_type entity, Components&&... components);
+
+  template<size_t I = 0, typename Component>
+  Component& get(const entity_type entity);
+
+  template<size_t I = 0>
   bool contains(const entity_type entity) const;
 
   template<size_t I = 0>
@@ -127,8 +133,6 @@ void basic_view<Registry, Components...>::for_each(const Func func)
 
     for_each<I + 1>(func);
   }
-  else
-    (void)func; // Suppress warning
 }
 
 template<typename Registry, typename... Components>
@@ -145,6 +149,43 @@ void basic_view<Registry, Components...>::erase(const entity_type entity)
     if (storage.contains(entity)) storage.erase(entity);
     else
       erase<I + 1>(entity);
+  }
+}
+
+template<typename Registry, typename... Components>
+template<size_t I>
+void basic_view<Registry, Components...>::set(const entity_type entity, Components&&... components)
+{
+  using current = typename at_t<I, archetype_list_type>;
+
+  if constexpr (I == size_v<archetype_list_type>) throw std::invalid_argument("Entity does not exist!");
+  else
+  {
+    auto& storage = _registry->template access<current>();
+
+    if (storage.contains(entity))
+    {
+      ((storage::template unpack<Components>() = std::move(components)), ...);
+    }
+    else
+      set<I + 1>(entity, std::move(components)...);
+  }
+}
+
+template<typename Registry, typename... Components>
+template<size_t I, typename Component>
+Component& basic_view<Registry, Components...>::get(const entity_type entity)
+{
+  using current = typename at_t<I, archetype_list_type>;
+
+  if constexpr (I == size_v<archetype_list_type>) throw std::invalid_argument("Entity does not exist!");
+  else
+  {
+    auto& storage = _registry->template access<current>();
+
+    if (storage.contains(entity)) return storage::template unpack<Component>();
+    else
+      return get<I + 1>(entity);
   }
 }
 
