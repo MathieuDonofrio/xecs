@@ -457,11 +457,9 @@ void Iterate_NoComponents()
     registry.create();
   }
 
-  auto v = registry.view();
-
   BEGIN_BENCHMARK(Iterate_NoComponents);
 
-  v.for_each([](auto entity)
+  registry.for_each([](auto entity)
     { benchmark::do_not_optimize(entity); });
 
   END_BENCHMARK(iterations, 1);
@@ -484,11 +482,9 @@ void Iterate_OneComponent()
     registry.create(Position {});
   }
 
-  auto v = registry.view<Position>();
-
   BEGIN_BENCHMARK(Iterate_OneComponent);
 
-  v.for_each([](auto entity, auto& position)
+  registry.for_each<Position>([](auto entity, auto& position)
     {
       benchmark::do_not_optimize(entity);
       benchmark::do_not_optimize(position);
@@ -514,11 +510,9 @@ void Iterate_TwoComponents()
     registry.create(Position {}, Velocity {});
   }
 
-  auto v = registry.view<Position, Velocity>();
-
   BEGIN_BENCHMARK(Iterate_TwoComponents);
 
-  v.for_each([](auto entity, auto& position, auto& velocity)
+  registry.for_each<Position, Velocity>([](auto entity, auto& position, auto& velocity)
     {
       benchmark::do_not_optimize(entity);
       benchmark::do_not_optimize(position);
@@ -545,11 +539,9 @@ void Iterate_ThreeComponents()
     registry.create(Position {}, Velocity {}, Color {});
   }
 
-  auto v = registry.view<Position, Velocity, Color>();
-
   BEGIN_BENCHMARK(Iterate_ThreeComponents);
 
-  v.for_each([](auto entity, auto& position, auto& velocity, auto& color)
+  registry.for_each<Position, Velocity, Color>([](auto entity, auto& position, auto& velocity, auto& color)
     {
       benchmark::do_not_optimize(entity);
       benchmark::do_not_optimize(position);
@@ -597,7 +589,9 @@ void Iterate_TenComponents()
       Component<9> {});
   }
 
-  auto v = registry.view<
+  BEGIN_BENCHMARK(Iterate_TenComponents);
+
+  registry.for_each<
     Component<0>,
     Component<1>,
     Component<2>,
@@ -607,11 +601,8 @@ void Iterate_TenComponents()
     Component<6>,
     Component<7>,
     Component<8>,
-    Component<9>>();
-
-  BEGIN_BENCHMARK(Iterate_TenComponents);
-
-  v.for_each([](auto entity, auto& c0, auto& c1, auto& c2, auto& c3, auto& c4, auto& c5, auto& c6, auto& c7, auto& c8, auto& c9)
+    Component<9>>(
+    [](auto entity, auto& c0, auto& c1, auto& c2, auto& c3, auto& c4, auto& c5, auto& c6, auto& c7, auto& c8, auto& c9)
     {
       benchmark::do_not_optimize(entity);
       benchmark::do_not_optimize(c0);
@@ -669,11 +660,9 @@ void Iterate_TenArchetypesNoComponents()
     }
   }
 
-  auto v = registry.view();
-
   BEGIN_BENCHMARK(Iterate_TenArchetypesNoComponents);
 
-  v.for_each([](auto entity)
+  registry.for_each([](auto entity)
     { benchmark::do_not_optimize(entity); });
 
   END_BENCHMARK(iterations, 1);

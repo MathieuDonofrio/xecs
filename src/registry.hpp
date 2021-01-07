@@ -16,8 +16,11 @@
 
 namespace ecs
 {
-template<typename Registry, typename... Components>
-class basic_view;
+namespace internal
+{
+  template<typename Registry, typename... Components>
+  class basic_view;
+}
 
 template<typename Entity, typename ArchetypeRegistry>
 class registry;
@@ -55,6 +58,9 @@ public:
 
   void optimize();
 
+  template<typename... Components, typename Func>
+  void for_each(Func& func) { view<Components...>().for_each(func); }
+
   template<typename... Components>
   void set(const entity_type entity, Components&&... components) { return view<Components...>().set(entity, components...); }
 
@@ -70,13 +76,12 @@ public:
   template<typename... Components>
   bool empty() { return size<Components...>() == 0; }
 
-public:
-
+private:
   template<typename... Components>
-  auto view() { return basic_view<registry_type, Components...> { this }; }
+  auto view() { return internal::basic_view<registry_type, Components...> { this }; }
 
 private:
-  friend basic_view;
+  friend internal::basic_view;
 
   template<size_t I = 0>
   void setup_shared_memory();
@@ -90,135 +95,138 @@ private:
   shared_type _shared;
 };
 
-template<typename Registry, typename... Components>
-class basic_view
+namespace internal
 {
-public:
-  using Registry_type = Registry;
-  using entity_type = typename Registry_type::entity_type;
-  using archetype_list_type = typename prune_for_t<Registry_type::template archetype_list_type, Components...>;
-
-public:
-  basic_view(Registry_type* registry) : _registry { registry } {}
-
-  template<size_t I = 0, typename Func>
-  void for_each(Func func);
-
-  template<size_t I = 0>
-  void erase(const entity_type entity);
-
-  template<size_t I = 0>
-  void set(const entity_type entity, Components&&... components);
-
-  template<size_t I = 0, typename Component>
-  Component& get(const entity_type entity);
-
-  template<size_t I = 0>
-  bool contains(const entity_type entity) const;
-
-  template<size_t I = 0>
-  size_t size() const;
-
-private:
-  Registry_type* _registry;
-};
-
-template<typename Registry, typename... Components>
-template<size_t I, typename Func>
-void basic_view<Registry, Components...>::for_each(const Func func)
-{
-  using current = typename at_t<I, archetype_list_type>;
-
-  if constexpr (I < size_v<archetype_list_type>)
+  template<typename Registry, typename... Components>
+  class basic_view
   {
-    auto& storage = _registry->template access<current>();
+  public:
+    using Registry_type = Registry;
+    using entity_type = typename Registry_type::entity_type;
+    using archetype_list_type = typename prune_for_t<Registry_type::template archetype_list_type, Components...>;
 
-    for (auto it = storage.begin(); it != storage.end(); ++it)
+  public:
+    basic_view(Registry_type* registry) : _registry { registry } {}
+
+    template<size_t I = 0, typename Func>
+    void for_each(const Func& func);
+
+    template<size_t I = 0>
+    void erase(const entity_type entity);
+
+    template<size_t I = 0>
+    void set(const entity_type entity, Components&&... components);
+
+    template<size_t I = 0, typename Component>
+    Component& get(const entity_type entity);
+
+    template<size_t I = 0>
+    bool contains(const entity_type entity) const;
+
+    template<size_t I = 0>
+    size_t size() const;
+
+  private:
+    Registry_type* _registry;
+  };
+
+  template<typename Registry, typename... Components>
+  template<size_t I, typename Func>
+  void basic_view<Registry, Components...>::for_each(const Func& func)
+  {
+    using current = typename at_t<I, archetype_list_type>;
+
+    if constexpr (I < size_v<archetype_list_type>)
     {
-      std::apply(func, std::make_tuple(*it, it.template unpack<Components>()...));
+      auto& storage = _registry->template access<current>();
+
+      for (auto it = storage.begin(); it != storage.end(); ++it)
+      {
+        std::apply(func, std::make_tuple(*it, it.template unpack<Components>()...));
+      }
+
+      for_each<I + 1>(func);
     }
-
-    for_each<I + 1>(func);
   }
-}
 
-template<typename Registry, typename... Components>
-template<size_t I>
-void basic_view<Registry, Components...>::erase(const entity_type entity)
-{
-  using current = typename at_t<I, archetype_list_type>;
-
-  if constexpr (I == size_v<archetype_list_type>) throw std::invalid_argument("Entity does not exist!");
-  else
+  template<typename Registry, typename... Components>
+  template<size_t I>
+  void basic_view<Registry, Components...>::erase(const entity_type entity)
   {
-    auto& storage = _registry->template access<current>();
+    using current = typename at_t<I, archetype_list_type>;
 
-    if (storage.contains(entity)) storage.erase(entity);
+    if constexpr (I == size_v<archetype_list_type>) throw std::invalid_argument("Entity does not exist!");
     else
-      erase<I + 1>(entity);
-  }
-}
-
-template<typename Registry, typename... Components>
-template<size_t I>
-void basic_view<Registry, Components...>::set(const entity_type entity, Components&&... components)
-{
-  using current = typename at_t<I, archetype_list_type>;
-
-  if constexpr (I == size_v<archetype_list_type>) throw std::invalid_argument("Entity does not exist!");
-  else
-  {
-    auto& storage = _registry->template access<current>();
-
-    if (storage.contains(entity))
     {
-      ((storage::template unpack<Components>() = std::move(components)), ...);
+      auto& storage = _registry->template access<current>();
+
+      if (storage.contains(entity)) storage.erase(entity);
+      else
+        erase<I + 1>(entity);
     }
-    else
-      set<I + 1>(entity, std::move(components)...);
   }
-}
 
-template<typename Registry, typename... Components>
-template<size_t I, typename Component>
-Component& basic_view<Registry, Components...>::get(const entity_type entity)
-{
-  using current = typename at_t<I, archetype_list_type>;
-
-  if constexpr (I == size_v<archetype_list_type>) throw std::invalid_argument("Entity does not exist!");
-  else
+  template<typename Registry, typename... Components>
+  template<size_t I>
+  void basic_view<Registry, Components...>::set(const entity_type entity, Components&&... components)
   {
-    auto& storage = _registry->template access<current>();
+    using current = typename at_t<I, archetype_list_type>;
 
-    if (storage.contains(entity)) return storage::template unpack<Component>();
+    if constexpr (I == size_v<archetype_list_type>) throw std::invalid_argument("Entity does not exist!");
     else
-      return get<I + 1>(entity);
+    {
+      auto& storage = _registry->template access<current>();
+
+      if (storage.contains(entity))
+      {
+        ((storage::template unpack<Components>() = std::move(components)), ...);
+      }
+      else
+        set<I + 1>(entity, std::move(components)...);
+    }
   }
-}
 
-template<typename Registry, typename... Components>
-template<size_t I>
-bool basic_view<Registry, Components...>::contains(const entity_type entity) const
-{
-  using current = typename at_t<I, archetype_list_type>;
+  template<typename Registry, typename... Components>
+  template<size_t I, typename Component>
+  Component& basic_view<Registry, Components...>::get(const entity_type entity)
+  {
+    using current = typename at_t<I, archetype_list_type>;
 
-  if constexpr (I == size_v<archetype_list_type>) return false;
-  else if (_registry->template access<current>().contains(entity))
-    return true;
-  else
-    return contains<I + 1>(entity);
-}
+    if constexpr (I == size_v<archetype_list_type>) throw std::invalid_argument("Entity does not exist!");
+    else
+    {
+      auto& storage = _registry->template access<current>();
 
-template<typename Registry, typename... Components>
-template<size_t I>
-size_t basic_view<Registry, Components...>::size() const
-{
-  using current = typename at_t<I, archetype_list_type>;
+      if (storage.contains(entity)) return storage::template unpack<Component>();
+      else
+        return get<I + 1>(entity);
+    }
+  }
 
-  if constexpr (I == size_v<archetype_list_type>) return 0;
-  else
-    return _registry->template access<current>().size() + size<I + 1>();
-}
+  template<typename Registry, typename... Components>
+  template<size_t I>
+  bool basic_view<Registry, Components...>::contains(const entity_type entity) const
+  {
+    using current = typename at_t<I, archetype_list_type>;
+
+    if constexpr (I == size_v<archetype_list_type>) return false;
+    else if (_registry->template access<current>().contains(entity))
+      return true;
+    else
+      return contains<I + 1>(entity);
+  }
+
+  template<typename Registry, typename... Components>
+  template<size_t I>
+  size_t basic_view<Registry, Components...>::size() const
+  {
+    using current = typename at_t<I, archetype_list_type>;
+
+    if constexpr (I == size_v<archetype_list_type>) return 0;
+    else
+      return _registry->template access<current>().size() + size<I + 1>();
+  }
+} // namespace internal
 
 template<typename Entity, typename... Archetypes>
 registry<Entity, list<Archetypes...>>::registry()
