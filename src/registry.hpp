@@ -54,13 +54,13 @@ public:
   void optimize();
 
   template<typename... Components>
+  bool has_components(const entity_type entity) const { return view<Components...>().contains(entity); }
+
+  template<typename... Components>
   auto view() const { return basic_view<registry_type, Components...> { const_cast<registry_type*>(this) }; }
 
   template<typename... Components>
   auto view() { return basic_view<registry_type, Components...> { this }; }
-
-  template<typename... Components>
-  bool has_components(const entity_type entity) const { return view<Components...>().contains(entity); }
 
   template<typename... Components>
   size_t size() const { return view<Components...>().size(); }
@@ -94,11 +94,11 @@ public:
 public:
   basic_view(Registry_type* registry) : _registry { registry } {}
 
-  template<size_t I = 0, typename Action>
-  void storage_action(const entity_type entity, const Action action);
-
   template<size_t I = 0, typename Func>
   void for_each(Func func);
+
+  template<size_t I = 0>
+  void erase(const entity_type entity);
 
   template<size_t I = 0>
   bool contains(const entity_type entity) const;
@@ -109,25 +109,6 @@ public:
 private:
   Registry_type* _registry;
 };
-
-template<typename Registry, typename... Components>
-template<size_t I, typename Action>
-void basic_view<Registry, Components...>::storage_action(const entity_type entity, const Action action)
-{
-  using current = typename at_t<I, archetype_list_type>;
-
-  if constexpr (I == size_v<archetype_list_type>) throw std::invalid_argument("Entity does not exist!");
-  else
-  {
-    auto& storage = _registry->template access<current>();
-
-    if (storage.contains(entity)) action(storage);
-    else
-      storage_action<I + 1, Action>(entity, action);
-  }
-  (void)entity; // Suppress warning
-  (void)action; // Suppress warning
-}
 
 template<typename Registry, typename... Components>
 template<size_t I, typename Func>
@@ -141,13 +122,30 @@ void basic_view<Registry, Components...>::for_each(const Func func)
 
     for (auto it = storage.begin(); it != storage.end(); ++it)
     {
-      std::apply(func, std::make_tuple(*it, it.template get<Components>()...));
+      std::apply(func, std::make_tuple(*it, it.template unpack<Components>()...));
     }
 
     for_each<I + 1>(func);
   }
   else
     (void)func; // Suppress warning
+}
+
+template<typename Registry, typename... Components>
+template<size_t I>
+void basic_view<Registry, Components...>::erase(const entity_type entity)
+{
+  using current = typename at_t<I, archetype_list_type>;
+
+  if constexpr (I == size_v<archetype_list_type>) throw std::invalid_argument("Entity does not exist!");
+  else
+  {
+    auto& storage = _registry->template access<current>();
+
+    if (storage.contains(entity)) storage.erase(entity);
+    else
+      erase<I + 1>(entity);
+  }
 }
 
 template<typename Registry, typename... Components>
@@ -217,8 +215,7 @@ void registry<Entity, list<Archetypes...>>::destroy(const entity_type entity)
   static_assert(size_v<prune_for_t<list<Archetypes...>, Components...>> > 0,
     "Registry does not contain suitable archetype for provided components");
 
-  view<Components...>().storage_action(entity, [entity](auto& storage)
-    { storage.erase(entity); });
+  view<Components...>().erase(entity);
 
   _manager.release(entity);
 }

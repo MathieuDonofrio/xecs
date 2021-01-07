@@ -388,7 +388,7 @@ TEST(StorageWithData, Insert_OneComponent)
 
   ASSERT_FALSE(storage.empty());
   ASSERT_EQ(storage.size(), 1);
-  ASSERT_EQ(storage.get<int>(0), 99);
+  ASSERT_EQ(storage.unpack<int>(0), 99);
 }
 
 TEST(StorageWithData, Insert_TwoComponents)
@@ -402,8 +402,8 @@ TEST(StorageWithData, Insert_TwoComponents)
 
   ASSERT_FALSE(storage.empty());
   ASSERT_EQ(storage.size(), 1);
-  ASSERT_EQ(storage.get<int>(0), 99);
-  ASSERT_EQ(storage.get<float>(0), 0.5f);
+  ASSERT_EQ(storage.unpack<int>(0), 99);
+  ASSERT_EQ(storage.unpack<float>(0), 0.5f);
 }
 
 TEST(StorageWithData, Insert_TwoComponentsReinsertedAfterErase)
@@ -419,8 +419,8 @@ TEST(StorageWithData, Insert_TwoComponentsReinsertedAfterErase)
 
   ASSERT_FALSE(storage.empty());
   ASSERT_EQ(storage.size(), 1);
-  ASSERT_EQ(storage.get<int>(0), 98);
-  ASSERT_EQ(storage.get<float>(0), 0.4f);
+  ASSERT_EQ(storage.unpack<int>(0), 98);
+  ASSERT_EQ(storage.unpack<float>(0), 0.4f);
 }
 
 TEST(StorageWithData, Insert_TriggerGrowth)
@@ -443,7 +443,7 @@ TEST(StorageWithData, Insert_TriggerGrowth)
   for (entity_type i = 0; i < amount; i++)
   {
     ASSERT_TRUE(storage.contains(i));
-    ASSERT_EQ(storage.get<unsigned int>(i), i);
+    ASSERT_EQ(storage.unpack<unsigned int>(i), i);
   }
 
   ASSERT_FALSE(storage.contains(amount));

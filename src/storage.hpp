@@ -71,12 +71,12 @@ public:
   size_type capacity() const { return _capacity; }
   bool empty() const { return _size == 0; }
 
-  template<typename Type>
-  Type& get(const entity_type value) { return access<Type>()[_sparse->index(value)]; }
+  template<typename Component>
+  Component& unpack(const entity_type value) { return access<Component>()[_sparse->index(value)]; }
 
 private:
-  template<typename Type>
-  Type*& access() { return std::get<Type*>(_storage); }
+  template<typename Component>
+  Component*& access() { return std::get<Component*>(_storage); }
 
 private:
   dense_type _dense;
@@ -124,11 +124,8 @@ public:
 
   const entity_type operator*() const { return _ptr->_dense[_pos]; }
 
-  template<typename Component>
-  const Component& get() const { return _ptr->access<Component>()[_pos]; }
-
-  template<typename Component>
-  Component& get() { return const_cast<Component&>(const_cast<const iterator*>(this)->get<Component>()); }
+  template<typename Component> const Component& unpack() const { return _ptr->access<Component>()[_pos]; }
+  template<typename Component> Component& unpack() { return _ptr->access<Component>()[_pos]; }
 
 private:
   storage* const _ptr;
