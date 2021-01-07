@@ -120,6 +120,72 @@ TEST(EntityManager, Release_SingleOnStack_Increment)
   ASSERT_EQ(manager.heap_reusable(), 0);
 }
 
+TEST(EntityManager, ReleaseAll_Single_Empty)
+{
+  using entity_type = unsigned int;
+  using entity_manager_type = entity_manager<entity_type>;
+
+  entity_manager_type manager;
+
+  manager.generate();
+
+  manager.release_all();
+
+  ASSERT_EQ(manager.peek(), 0);
+  ASSERT_EQ(manager.reusable(), 0);
+  ASSERT_EQ(manager.stack_reusable(), 0);
+  ASSERT_EQ(manager.heap_reusable(), 0);
+}
+
+TEST(EntityManager, ReleaseAll_Multiple_Empty)
+{
+  using entity_type = unsigned int;
+  using entity_manager_type = entity_manager<entity_type>;
+
+  entity_manager_type manager;
+
+  for(int i = 0; i < 10000; i++)
+  {
+    manager.generate();
+  }
+
+  manager.release_all();
+
+  ASSERT_EQ(manager.peek(), 0);
+  ASSERT_EQ(manager.reusable(), 0);
+  ASSERT_EQ(manager.stack_reusable(), 0);
+  ASSERT_EQ(manager.heap_reusable(), 0);
+}
+
+TEST(EntityManager, ReleaseAll_MultipleReused_Empty)
+{
+  using entity_type = unsigned int;
+  using entity_manager_type = entity_manager<entity_type>;
+
+  entity_manager_type manager;
+
+  std::vector<entity_type> entities;
+
+  int amount = 10000;
+
+  for(int i = 0; i < amount; i++)
+  {
+    entities.push_back(manager.generate());
+  }
+
+  for(auto it = entities.begin(); it != entities.end(); ++it)
+  {
+    manager.release(*it);
+  }
+
+  manager.release_all();
+
+  ASSERT_EQ(manager.peek(), 0);
+  ASSERT_EQ(manager.reusable(), 0);
+  ASSERT_EQ(manager.stack_reusable(), 0);
+  ASSERT_EQ(manager.heap_reusable(), 0);
+}
+
 TEST(EntityManager, Release_FillStackGoToHeap_Increment)
 {
   using entity_type = unsigned int;

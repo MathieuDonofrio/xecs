@@ -33,6 +33,7 @@ public:
 
   entity_type generate();
   void release(entity_type entity);
+  void release_all();
 
   entity_type peek() const { return _current; }
 
@@ -94,6 +95,14 @@ void entity_manager<Entity>::release(const entity_type entity)
     }
     _heap_buffer[_heap_reusable++] = entity;
   }
+}
+
+template<typename Entity>
+void entity_manager<Entity>::release_all()
+{
+  _stack_reusable = 0;
+  _heap_reusable = 0;
+  _current = 0;
 }
 
 template<typename Entity>
