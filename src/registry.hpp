@@ -63,10 +63,15 @@ public:
   Component& get(const entity_type entity) { return view<Component>()::template get<Component>(); }
 
   template<typename... Components>
-  auto view() { return basic_view<registry_type, Components...> { this }; }
+  size_t size() { return view<Components...>().size(); }
 
   template<typename... Components>
-  size_t size() { return view<Components...>().size(); }
+  bool empty() { return size<Components...>() == 0; }
+
+public:
+
+  template<typename... Components>
+  auto view() { return basic_view<registry_type, Components...> { this }; }
 
 private:
   friend basic_view;
