@@ -51,16 +51,18 @@ public:
   template<typename... Components>
   void destroy(const entity_type entity);
 
+  void destroy_all();
+
   void optimize();
 
   template<typename... Components>
   void set(const entity_type entity, Components&&... components) { return view<Components...>().set(entity, components...); }
 
-  template<typename... Components>
-  bool has(const entity_type entity) { return view<Components...>().contains(entity); }
-
   template<typename Component>
   Component& get(const entity_type entity) { return view<Component>()::template get<Component>(); }
+
+  template<typename... Components>
+  bool has(const entity_type entity) { return view<Components...>().contains(entity); }
 
   template<typename... Components>
   size_t size() { return view<Components...>().size(); }
@@ -264,6 +266,14 @@ void registry<Entity, list<Archetypes...>>::destroy(const entity_type entity)
   view<Components...>().erase(entity);
 
   _manager.release(entity);
+}
+
+template<typename Entity, typename... Archetypes>
+void registry<Entity, list<Archetypes...>>::destroy_all()
+{
+  ((access<Archetypes>().clear()), ...);
+
+  _manager.release_all();
 }
 
 template<typename Entity, typename... Archetypes>
