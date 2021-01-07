@@ -77,6 +77,12 @@ static_assert(std::is_same_v<list<>, prune_for_t<list<list<int, bool>, list<floa
 static_assert(std::is_same_v<list<list<float, int>>, prune_for_t<list<list<int, bool>, list<float, int>, list<bool>>, float, int>>, "");
 static_assert(std::is_same_v<list<list<int, bool, float>, list<float, int>>, prune_for_t<list<list<int, bool, float>, list<float, int>, list<bool>>, float, int>>, "");
 
+static_assert(std::is_same_v<list<int>, find_for_t<list<list<int>>, int>>, "");
+static_assert(std::is_same_v<list<int>, find_for_t<list<list<float>, list<int>>, int>>, "");
+static_assert(std::is_same_v<list<int>, find_for_t<list<list<int, float>, list<int>>, int>>, "");
+static_assert(std::is_same_v<list<int, float>, find_for_t<list<list<int, float>, list<int>>, int, float>>, "");
+static_assert(std::is_same_v<list<int, float>, find_for_t<list<list<int, float>, list<int>>, float, int>>, "");
+
 static_assert(std::is_same_v<int, at_t<0, list<int>>>, "");
 static_assert(std::is_same_v<float, at_t<0, list<float, int>>>, "");
 static_assert(std::is_same_v<int, at_t<1, list<float, int>>>, "");

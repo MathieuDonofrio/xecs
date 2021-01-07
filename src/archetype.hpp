@@ -102,7 +102,7 @@ private:
   using next = typename find_for<ListOfLists<Lists...>, RequiredTypes...>::type;
 
 public:
-  using type = typename std::conditional_t<contains_all<HeadList, RequiredTypes...>::value, HeadList, next>;
+  using type = typename std::conditional_t<is_same_types_v<HeadList, list<RequiredTypes...>>, HeadList, next>;
 };
 
 template<typename ListOfLists, typename... RequiredTypes>
