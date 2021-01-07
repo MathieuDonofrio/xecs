@@ -183,7 +183,7 @@ namespace internal
 
   template<typename Entity>
   sparse_array<Entity>::sparse_array()
-    : _pages(4)
+    : _pages(8)
   {
     // This needs to be calloc because 0 pointers are used to determine if the page is allocated
     _array = static_cast<array_type>(std::calloc(_pages, sizeof(page_type)));
