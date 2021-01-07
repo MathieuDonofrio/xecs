@@ -202,36 +202,6 @@ TEST(Storage, Insert_TriggerGrowth)
   ASSERT_FALSE(storage.contains(amount));
 }
 
-TEST(Storage, ShrinkToFit__UnderMinimumCapacity_DontShrink)
-{
-  using entity_type = unsigned int;
-  using storage_type = storage<entity_type, archetype<unsigned int>>;
-
-  storage_type storage;
-
-  ASSERT_TRUE(storage.empty());
-  ASSERT_EQ(storage.capacity(), STORAGE_MINIMUM_CAPACITY);
-
-  storage.shrink_to_fit();
-
-  ASSERT_TRUE(storage.empty());
-  ASSERT_EQ(storage.capacity(), STORAGE_MINIMUM_CAPACITY);
-
-  entity_type amount = STORAGE_MINIMUM_CAPACITY - 1;
-
-  for (entity_type i = 0; i < amount; i++)
-  {
-    storage.insert(i, std::move(i));
-  }
-
-  ASSERT_EQ(storage.size(), amount);
-
-  storage.shrink_to_fit();
-
-  ASSERT_EQ(storage.size(), amount);
-  ASSERT_EQ(storage.capacity(), STORAGE_MINIMUM_CAPACITY);
-}
-
 TEST(Storage, ShrinkToFit_MemoryOverhead)
 {
   using entity_type = unsigned int;

@@ -14,10 +14,6 @@
 
 static_assert((SPARSE_ARRAY_PAGE_SIZE & (SPARSE_ARRAY_PAGE_SIZE - 1)) == 0, "SPARSE_ARRAY_PAGE_SIZE must be a power of two");
 
-#define STORAGE_MINIMUM_CAPACITY 8
-
-static_assert(STORAGE_MINIMUM_CAPACITY != 0, "STORAGE_MINIMUM_CAPACITY cannot be 0");
-
 namespace ecs
 {
 namespace internal
@@ -223,7 +219,7 @@ namespace internal
 
 template<typename Entity, typename... Components>
 storage<Entity, archetype<Components...>>::storage()
-  : _size { 0 }, _capacity { STORAGE_MINIMUM_CAPACITY }
+  : _size { 0 }, _capacity { 0 }
 {
   _sparse = std::make_shared<internal::sparse_array<entity_type>>();
   _dense = static_cast<dense_type>(std::malloc(_capacity * sizeof(entity_type)));
@@ -304,7 +300,7 @@ bool storage<Entity, archetype<Components...>>::contains(const entity_type value
 template<typename Entity, typename... Components>
 void storage<Entity, archetype<Components...>>::shrink_to_fit()
 {
-  if (_size != _capacity && _size > STORAGE_MINIMUM_CAPACITY)
+  if (_size != _capacity)
   {
     _capacity = _size;
 
