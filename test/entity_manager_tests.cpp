@@ -144,7 +144,7 @@ TEST(EntityManager, ReleaseAll_Multiple_Empty)
 
   entity_manager_type manager;
 
-  for(int i = 0; i < 10000; i++)
+  for(size_t i = 0; i < 10000; i++)
   {
     manager.generate();
   }
@@ -166,9 +166,9 @@ TEST(EntityManager, ReleaseAll_MultipleReused_Empty)
 
   std::vector<entity_type> entities;
 
-  int amount = 10000;
+  size_t amount = 10000;
 
-  for(int i = 0; i < amount; i++)
+  for(size_t i = 0; i < amount; i++)
   {
     entities.push_back(manager.generate());
   }
