@@ -422,16 +422,16 @@ TEST(StorageWithData, Insert_TriggerGrowth)
 TEST(StorageSharedSparse, IsShared_TwoStoragesInsertSingle_ContainsBoth)
 {
   using entity_type = unsigned int;
-  using sparse_type = std::shared_ptr<internal::sparse_array<entity_type>>;
+  using sparse_type = internal::sparse_array<entity_type>;
   using storage_type = storage<entity_type, archetype<>>;
 
-  sparse_type shared = std::make_shared<internal::sparse_array<entity_type>>();
+  sparse_type shared;
 
   storage_type storage1;
   storage_type storage2;
 
-  storage1.make_shared(shared);
-  storage2.make_shared(shared);
+  storage1.share(&shared);
+  storage2.share(&shared);
 
   storage1.insert(10);
 
@@ -449,26 +449,26 @@ TEST(StorageSharedSparse, IsShared_TwoStoragesInsertSingle_ContainsBoth)
 TEST(StorageSharedSparse, IsShared_TwoStoragesInsertSingle_UsingSharedMemory)
 {
   using entity_type = unsigned int;
-  using sparse_type = std::shared_ptr<internal::sparse_array<entity_type>>;
+  using sparse_type = internal::sparse_array<entity_type>;
   using storage_type = storage<entity_type, archetype<>>;
 
-  sparse_type shared = std::make_shared<internal::sparse_array<entity_type>>();
+  sparse_type shared;
 
   storage_type storage1;
   storage_type storage2;
 
-  storage1.make_shared(shared);
-  storage2.make_shared(shared);
+  storage1.share(&shared);
+  storage2.share(&shared);
 
-  ASSERT_TRUE((*shared)[shared->page(100)] == 0);
-  ASSERT_TRUE(shared->page(100000) > shared->pages());
+  ASSERT_TRUE(shared[shared.page(100)] == 0);
+  ASSERT_TRUE(shared.page(100000) > shared.pages());
 
   storage1.insert(100);
 
-  ASSERT_TRUE((*shared)[shared->page(100)] != 0);
+  ASSERT_TRUE(shared[shared.page(100)] != 0);
 
   storage2.insert(100000);
 
-  ASSERT_TRUE(shared->page(100000) < shared->pages());
-  ASSERT_TRUE((*shared)[shared->page(100000)] != 0);
+  ASSERT_TRUE(shared.page(100000) < shared.pages());
+  ASSERT_TRUE(shared[shared.page(100000)] != 0);
 }

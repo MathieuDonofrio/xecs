@@ -34,7 +34,7 @@ public:
   using registry_type = registry<entity_type, archetype_list_type>;
   using manager_type = entity_manager<entity_type>;
   using pool_type = std::tuple<storage<entity_type, Archetypes>...>;
-  using shared_type = std::shared_ptr<internal::sparse_array<entity_type>>;
+  using shared_type = internal::sparse_array<entity_type>;
 
   static_assert(std::numeric_limits<entity_type>::is_integer && !std::numeric_limits<entity_type>::is_signed,
     "Entity must be an unsigned integer");
@@ -231,7 +231,6 @@ namespace internal
 template<typename Entity, typename... Archetypes>
 registry<Entity, list<Archetypes...>>::registry()
 {
-  _shared = std::make_shared<internal::sparse_array<entity_type>>();
   setup_shared_memory();
 }
 
@@ -243,7 +242,7 @@ void registry<Entity, list<Archetypes...>>::setup_shared_memory()
 
   if constexpr (I < size_v<archetype_list_type>)
   {
-    access<current>().make_shared(_shared);
+    access<current>().share(&_shared);
     setup_shared_memory<I + 1>();
   }
 }

@@ -34,7 +34,7 @@ public:
 private:
   using dense_type = entity_type*;
   using page_type = entity_type*;
-  using sparse_type = std::shared_ptr<internal::sparse_array<Entity>>;
+  using sparse_type = internal::sparse_array<Entity>*;
   using storage_type = std::tuple<Components*...>;
 
 public:
@@ -61,7 +61,7 @@ public:
   iterator begin() { return { this, _size - 1 }; }
   iterator end() { return { this, static_cast<size_type>(-1) }; }
 
-  void make_shared(const sparse_type& sparse) { _sparse = sparse; }
+  void share(const sparse_type sparse);
 
   size_type size() const { return _size; }
   size_type capacity() const { return _capacity; }
@@ -120,8 +120,10 @@ public:
 
   const entity_type operator*() const { return _ptr->_dense[_pos]; }
 
-  template<typename Component> const Component& unpack() const { return _ptr->access<Component>()[_pos]; }
-  template<typename Component> Component& unpack() { return _ptr->access<Component>()[_pos]; }
+  template<typename Component>
+  const Component& unpack() const { return _ptr->access<Component>()[_pos]; }
+  template<typename Component>
+  Component& unpack() { return _ptr->access<Component>()[_pos]; }
 
 private:
   storage* const _ptr;
@@ -166,20 +168,24 @@ namespace internal
     page_type operator[](const size_type page) const { return _array[page]; }
     page_type& operator[](const size_type page) { return _array[page]; }
 
-    size_type page(const entity_type entity) const { return entity >> page_shift; };
+    size_type page(const entity_type entity) const { return entity >> page_shift; }
     size_type offset(const entity_type entity) const { return entity & offset_mask; }
     size_type index(const entity_type entity) const { return _array[page(entity)][offset(entity)]; }
 
-    size_type pages() const { return _pages; };
+    size_type pages() const { return _pages; }
+
+    void make_shared() { _shared = true; }
+    bool shared() const { return _shared; }
 
   private:
     array_type _array;
     size_type _pages;
+    bool _shared;
   };
 
   template<typename Entity>
   sparse_array<Entity>::sparse_array()
-    : _pages(8)
+    : _pages(8), _shared(false)
   {
     // This needs to be calloc because 0 pointers are used to determine if the page is allocated
     _array = static_cast<array_type>(std::calloc(_pages, sizeof(page_type)));
@@ -221,7 +227,7 @@ template<typename Entity, typename... Components>
 storage<Entity, archetype<Components...>>::storage()
   : _size { 0 }, _capacity { 0 }
 {
-  _sparse = std::make_shared<internal::sparse_array<entity_type>>();
+  _sparse = new internal::sparse_array<entity_type>();
   _dense = static_cast<dense_type>(std::malloc(_capacity * sizeof(entity_type)));
   ((access<Components>() = static_cast<Components*>(std::malloc(_capacity * sizeof(Components)))), ...);
 }
@@ -229,6 +235,7 @@ storage<Entity, archetype<Components...>>::storage()
 template<typename Entity, typename... Components>
 storage<Entity, archetype<Components...>>::~storage()
 {
+  if (!_sparse->shared()) delete _sparse;
   free(_dense);
   (free(access<Components>()), ...);
 }
@@ -307,5 +314,13 @@ void storage<Entity, archetype<Components...>>::shrink_to_fit()
     _dense = static_cast<dense_type>(std::realloc(_dense, _capacity * sizeof(entity_type)));
     ((access<Components>() = static_cast<Components*>(std::realloc(access<Components>(), _capacity * sizeof(Components)))), ...);
   }
+}
+
+template<typename Entity, typename... Components>
+void storage<Entity, archetype<Components...>>::share(const sparse_type sparse)
+{
+  if (!_sparse->shared()) delete _sparse;
+  _sparse = sparse;
+  sparse->make_shared();
 }
 } // namespace ecs
