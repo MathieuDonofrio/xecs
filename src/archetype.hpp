@@ -5,23 +5,6 @@
 #include <tuple>
 #include <type_traits>
 
-namespace std
-{
-template<typename T, typename Tuple>
-struct find_index;
-
-template<typename T, typename... Types>
-struct find_index<T, std::tuple<T, Types...>> : std::integral_constant<size_t, 0>
-{};
-
-template<typename T, typename U, typename... Types>
-struct find_index<T, std::tuple<U, Types...>> : std::integral_constant<size_t, 1 + find_index<T, std::tuple<Types...>>::value>
-{};
-
-template<typename Type, typename Tuple>
-inline constexpr Type& get(const Tuple& tuple) { return std::get<find_index<Type, Tuple>::value>(tuple); }
-} // namespace std
-
 namespace ecs
 {
 template<typename... Types>

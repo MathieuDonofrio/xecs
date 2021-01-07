@@ -1,15 +1,5 @@
 #include <archetype.hpp>
 
-namespace std
-{
-static_assert(find_index<int, std::tuple<int>>::value == 0, "");
-static_assert(find_index<int, std::tuple<int, float>>::value == 0, "");
-static_assert(find_index<int, std::tuple<float, int>>::value == 1, "");
-static_assert(find_index<int, std::tuple<float, int, char>>::value == 1, "");
-static_assert(find_index<int, std::tuple<float, bool, int>>::value == 2, "");
-static_assert(find_index<float, std::tuple<double, float, bool, int>>::value == 1, "");
-} // namespace std
-
 namespace ecs
 {
 static_assert(size_v<list<>> == 0, "");
