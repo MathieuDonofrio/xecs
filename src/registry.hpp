@@ -142,7 +142,7 @@ namespace internal
 
       for (auto it = storage.begin(); it != storage.end(); ++it)
       {
-        std::apply(func, std::make_tuple(*it, it.template unpack<Components>()...));
+        func(*it, it.template unpack<Components>()...);
       }
 
       for_each<I + 1>(func);
