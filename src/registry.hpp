@@ -103,9 +103,6 @@ public:
   template<size_t I = 0>
   void erase(const entity_type entity);
 
-  template<size_t I = 0>
-  void set(const entity_type entity, const Components&... components);
-
   template<size_t I = 0, typename Component>
   Component& unpack(const entity_type entity);
 
