@@ -639,24 +639,22 @@ void Iterate_TenArchetypesNoComponents()
 
   registry<entity_type, registered_archetypes> registry;
 
-  std::vector<entity_type> entities {};
-
   const size_t iterations = 10000000;
 
   for (size_t i = 0; i < iterations; i++)
   {
     switch (i % 10)
     {
-    case 0: entities.push_back(registry.create(Component<0> {})); break;
-    case 1: entities.push_back(registry.create(Component<1> {})); break;
-    case 2: entities.push_back(registry.create(Component<2> {})); break;
-    case 3: entities.push_back(registry.create(Component<3> {})); break;
-    case 4: entities.push_back(registry.create(Component<4> {})); break;
-    case 5: entities.push_back(registry.create(Component<5> {})); break;
-    case 6: entities.push_back(registry.create(Component<6> {})); break;
-    case 7: entities.push_back(registry.create(Component<7> {})); break;
-    case 8: entities.push_back(registry.create(Component<8> {})); break;
-    case 9: entities.push_back(registry.create(Component<9> {})); break;
+    case 0: registry.create(Component<0> {}); break;
+    case 1: registry.create(Component<1> {}); break;
+    case 2: registry.create(Component<2> {}); break;
+    case 3: registry.create(Component<3> {}); break;
+    case 4: registry.create(Component<4> {}); break;
+    case 5: registry.create(Component<5> {}); break;
+    case 6: registry.create(Component<6> {}); break;
+    case 7: registry.create(Component<7> {}); break;
+    case 8: registry.create(Component<8> {}); break;
+    case 9: registry.create(Component<9> {}); break;
     }
   }
 
@@ -667,6 +665,52 @@ void Iterate_TenArchetypesNoComponents()
 
   END_BENCHMARK(iterations, 1);
 
+  benchmark::do_not_optimize(registry.size());
+}
+
+void Iterate_WithSomeWork()
+{
+  using entity_type = unsigned int;
+  using registered_archetypes = registry_builder::
+    add<archetype<Position>>:: // These are uneused and should not effect performance
+    add<archetype<Velocity>>:: // These are uneused and should not effect performance
+    add<archetype<Position, Velocity>>::
+      add<archetype<Position, Velocity, Color>>::
+        build;
+
+  registry<entity_type, registered_archetypes> registry;
+
+  const size_t iterations = 10000000;
+
+  for (size_t i = 0; i < iterations; i++)
+  {
+    double d = static_cast<double>(i);
+    registry.create(Position { d, d });
+    registry.create(Velocity { d, d });
+    registry.create(Position { d, d }, Velocity { d, d });
+    registry.create(Position { d, d }, Velocity { d, d }, Color {});
+  }
+
+  BEGIN_BENCHMARK(Iterate_WithSomeWork);
+
+  registry.for_each<Position, Velocity>([](auto entity, auto& position, auto& velocity)
+    {
+      // this is just random
+      position.x *= velocity.x * velocity.x;
+      position.y *= velocity.y * velocity.y;
+      velocity.x *= 0.98956;
+      velocity.y *= 0.98789;
+      benchmark::do_not_optimize(entity);
+    });
+
+  END_BENCHMARK(iterations, 1);
+
+  double sum = 0;
+
+  registry.for_each<Position, Velocity>([&sum](auto entity, auto& position, auto& velocity)
+    { sum += position.x + position.y + velocity.x + velocity.y; });
+
+  benchmark::do_not_optimize(sum);
   benchmark::do_not_optimize(registry.size());
 }
 
@@ -693,6 +737,7 @@ int main()
   Iterate_ThreeComponents();
   Iterate_TenComponents();
   Iterate_TenArchetypesNoComponents();
+  Iterate_WithSomeWork();
 
   return 0;
 }
