@@ -130,7 +130,7 @@ void registry<Entity, list<Archetypes...>>::basic_view<Components...>::for_each(
 {
   using current = at_t<I, archetype_list_view_type>;
 
-  if constexpr (I < size_v<archetype_list_type>)
+  if constexpr (I < size_v<archetype_list_view_type>)
   {
     auto& storage = _registry->template access<current>();
 
