@@ -672,8 +672,6 @@ void Iterate_WithSomeWork()
 {
   using entity_type = unsigned int;
   using registered_archetypes = registry_builder::
-    add<archetype<Position>>:: // These are uneused and should not effect performance
-    add<archetype<Velocity>>:: // These are uneused and should not effect performance
     add<archetype<Position, Velocity>>::
       add<archetype<Position, Velocity, Color>>::
         build;
@@ -685,10 +683,10 @@ void Iterate_WithSomeWork()
   for (size_t i = 0; i < iterations; i++)
   {
     double d = static_cast<double>(i);
-    registry.create(Position { d, d });
-    registry.create(Velocity { d, d });
-    registry.create(Position { d, d }, Velocity { d, d });
-    registry.create(Position { d, d }, Velocity { d, d }, Color {});
+    if (i % 2)
+      registry.create(Position { d, d }, Velocity { d, d });
+    else
+      registry.create(Position { d, d }, Velocity { d, d }, Color {});
   }
 
   BEGIN_BENCHMARK(Iterate_WithSomeWork);
