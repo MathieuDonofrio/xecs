@@ -459,7 +459,7 @@ void Iterate_NoComponents()
 
   BEGIN_BENCHMARK(Iterate_NoComponents);
 
-  registry.for_each([](auto entity)
+  registry.for_each([](entity_type entity)
     { benchmark::do_not_optimize(entity); });
 
   END_BENCHMARK(iterations, 1);
