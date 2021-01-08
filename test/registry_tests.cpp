@@ -6,7 +6,7 @@ using namespace ecs;
 TEST(Registry, Empty_AfterInitialization_True)
 {
   using entity_type = unsigned int;
-  using registered_archetypes = registry_builder::
+  using registered_archetypes = archetype_list_builder::
     add<archetype<>>::build;
 
   registry<entity_type, registered_archetypes> registry;
@@ -18,7 +18,7 @@ TEST(Registry, Empty_AfterInitialization_True)
 TEST(Registry, Create_Single_SizeIncrease)
 {
   using entity_type = unsigned int;
-  using registered_archetypes = registry_builder::
+  using registered_archetypes = archetype_list_builder::
     add<archetype<>>::build;
 
   registry<entity_type, registered_archetypes> registry;
@@ -32,7 +32,7 @@ TEST(Registry, Create_Single_SizeIncrease)
 TEST(Registry, Has_WithoutValue_False)
 {
   using entity_type = unsigned int;
-  using registered_archetypes = registry_builder::
+  using registered_archetypes = archetype_list_builder::
     add<archetype<>>::build;
 
   registry<entity_type, registered_archetypes> registry;
@@ -43,7 +43,7 @@ TEST(Registry, Has_WithoutValue_False)
 TEST(Registry, Has_WithValue_True)
 {
   using entity_type = unsigned int;
-  using registered_archetypes = registry_builder::
+  using registered_archetypes = archetype_list_builder::
     add<archetype<>>::build;
 
   registry<entity_type, registered_archetypes> registry;
@@ -56,7 +56,7 @@ TEST(Registry, Has_WithValue_True)
 TEST(Registry, Has_WithIncorrectValue_True)
 {
   using entity_type = unsigned int;
-  using registered_archetypes = registry_builder::
+  using registered_archetypes = archetype_list_builder::
     add<archetype<>>::build;
 
   registry<entity_type, registered_archetypes> registry;
@@ -69,7 +69,7 @@ TEST(Registry, Has_WithIncorrectValue_True)
 TEST(Registry, Destroy_Single_SizeDecrease)
 {
   using entity_type = unsigned int;
-  using registered_archetypes = registry_builder::
+  using registered_archetypes = archetype_list_builder::
     add<archetype<>>::build;
 
   registry<entity_type, registered_archetypes> registry;
@@ -84,7 +84,7 @@ TEST(Registry, Destroy_Single_SizeDecrease)
 TEST(Registry, DestroyAll_Empty_Empty)
 {
   using entity_type = unsigned int;
-  using registered_archetypes = registry_builder::
+  using registered_archetypes = archetype_list_builder::
     add<archetype<>>::build;
 
   registry<entity_type, registered_archetypes> registry;
@@ -98,7 +98,7 @@ TEST(Registry, DestroyAll_Empty_Empty)
 TEST(Registry, DestroyAll_Single_Empty)
 {
   using entity_type = unsigned int;
-  using registered_archetypes = registry_builder::
+  using registered_archetypes = archetype_list_builder::
     add<archetype<>>::build;
 
   registry<entity_type, registered_archetypes> registry;
@@ -113,7 +113,7 @@ TEST(Registry, DestroyAll_Single_Empty)
 TEST(Registry, Create_Multiple_SizeIncrease)
 {
   using entity_type = unsigned int;
-  using registered_archetypes = registry_builder::
+  using registered_archetypes = archetype_list_builder::
     add<archetype<>>::build;
 
   registry<entity_type, registered_archetypes> registry;
@@ -132,7 +132,7 @@ TEST(Registry, Create_Multiple_SizeIncrease)
 TEST(Registry, Create_TwoArchetypes_SizeIncrease)
 {
   using entity_type = unsigned int;
-  using registered_archetypes = registry_builder::
+  using registered_archetypes = archetype_list_builder::
     add<archetype<int>>::
       add<archetype<float>>::
         build;
@@ -151,7 +151,7 @@ TEST(Registry, Create_TwoArchetypes_SizeIncrease)
 TEST(Registry, Has_TwoArchetypes)
 {
   using entity_type = unsigned int;
-  using registered_archetypes = registry_builder::
+  using registered_archetypes = archetype_list_builder::
     add<archetype<int>>::
       add<archetype<float>>::
         build;
@@ -178,7 +178,7 @@ TEST(Registry, Has_TwoArchetypes)
 TEST(Registry, Destroy_TwoArchetypes_SizeDecrease)
 {
   using entity_type = unsigned int;
-  using registered_archetypes = registry_builder::
+  using registered_archetypes = archetype_list_builder::
     add<archetype<int>>::
       add<archetype<float>>::
         build;
@@ -223,7 +223,7 @@ TEST(Registry, Destroy_TwoArchetypes_SizeDecrease)
 TEST(Registry, Create_TwoArchetypesMultipleComponents_SizeIncrease)
 {
   using entity_type = unsigned int;
-  using registered_archetypes = registry_builder::
+  using registered_archetypes = archetype_list_builder::
     add<archetype<int>>::
       add<archetype<float, int, bool>>::
         build;
@@ -255,7 +255,7 @@ TEST(Registry, Create_TwoArchetypesMultipleComponents_SizeIncrease)
 TEST(Registry, Create_TwoArchetypesMultipleComponentsDifferentOrder_SizeIncrease)
 {
   using entity_type = unsigned int;
-  using registered_archetypes = registry_builder::
+  using registered_archetypes = archetype_list_builder::
     add<archetype<int>>::
       add<archetype<float, int, bool>>::
         build;

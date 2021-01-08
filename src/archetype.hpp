@@ -196,13 +196,13 @@ struct verify_archetype_list<list<Archetypes...>> : verify_archetype<Archetypes>
 namespace internal
 {
   template<typename... Archetypes>
-  struct registry_builder
+  struct archetype_list_builder
   {
     template<typename Archetype>
-    using add = registry_builder<Archetype, Archetypes...>;
+    using add = archetype_list_builder<Archetype, Archetypes...>;
     using build = list<Archetypes...>;
   };
 } // namespace internal
 
-using registry_builder = internal::registry_builder<>;
+using archetype_list_builder = internal::archetype_list_builder<>;
 } // namespace ecs
