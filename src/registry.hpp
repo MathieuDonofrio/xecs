@@ -47,7 +47,7 @@ public:
   registry& operator=(const registry&) = delete;
 
   template<typename... Components>
-  entity_type create(Components&&... components);
+  entity_type create(const Components&... components);
 
   template<typename... Components>
   void destroy(const entity_type entity);
@@ -60,7 +60,7 @@ public:
   void for_each(const Func& func) { view<Components...>().for_each(func); }
 
   template<typename... Components>
-  void set(const entity_type entity, Components&&... components) { return view<Components...>().set(entity, components...); }
+  void set(const entity_type entity, const Components&... components) { return view<Components...>().set(entity, components...); }
 
   template<typename Component>
   Component& get(const entity_type entity) { return view<Component>().template get<Component>(); }
@@ -108,7 +108,7 @@ public:
   void erase(const entity_type entity);
 
   template<size_t I = 0>
-  void set(const entity_type entity, Components&&... components);
+  void set(const entity_type entity, const Components&... components);
 
   template<size_t I = 0, typename Component>
   Component& get(const entity_type entity);
@@ -165,7 +165,7 @@ void registry<Entity, list<Archetypes...>>::basic_view<Components...>::erase(con
 template<typename Entity, typename... Archetypes>
 template<typename... Components>
 template<size_t I>
-void registry<Entity, list<Archetypes...>>::basic_view<Components...>::set(const entity_type entity, Components&&... components)
+void registry<Entity, list<Archetypes...>>::basic_view<Components...>::set(const entity_type entity, const Components&... components)
 {
   using current = at_t<I, archetype_list_view_type>;
 
@@ -176,10 +176,10 @@ void registry<Entity, list<Archetypes...>>::basic_view<Components...>::set(const
 
     if (storage.contains(entity))
     {
-      ((storage.template unpack<Components>() = std::move(components)), ...);
+      ((storage.template unpack<Components>() = components), ...);
     }
     else
-      set<I + 1>(entity, std::move(components)...);
+      set<I + 1>(entity, components...);
   }
 }
 
@@ -248,7 +248,7 @@ void registry<Entity, list<Archetypes...>>::setup_shared_memory()
 
 template<typename Entity, typename... Archetypes>
 template<typename... Components>
-Entity registry<Entity, list<Archetypes...>>::create(Components&&... components)
+Entity registry<Entity, list<Archetypes...>>::create(const Components&... components)
 {
   static_assert(size_v<prune_for_t<list<Archetypes...>, Components...>> > 0,
     "Registry does not contain suitable archetype for provided components");
@@ -257,7 +257,7 @@ Entity registry<Entity, list<Archetypes...>>::create(Components&&... components)
 
   const entity_type entity = _manager.generate();
 
-  access<current>().insert(entity, std::move(components)...);
+  access<current>().insert(entity, components...);
 
   return entity;
 }

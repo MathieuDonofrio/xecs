@@ -213,7 +213,7 @@ TEST(Storage, ShrinkToFit_MemoryOverhead)
 
   for (entity_type i = 0; i < amount; i++)
   {
-    storage.insert(i, std::move(i));
+    storage.insert(i, i);
   }
 
   ASSERT_NE(storage.capacity(), storage.size());
@@ -331,7 +331,7 @@ TEST(Storage, Iterator_CorrectIterations)
 
   for (entity_type i = 0; i < amount; i++)
   {
-    storage.insert(i, std::move(i));
+    storage.insert(i, i);
   }
 
   ASSERT_NE(storage.begin(), storage.end());
