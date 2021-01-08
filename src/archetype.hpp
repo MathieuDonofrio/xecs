@@ -156,13 +156,9 @@ using at_t = typename at<I, List>::type;
 template<typename... Components>
 struct archetype : list<Components...>
 {
-  static_assert(unique_types_v<Components...>, "Archetypes cannot contain duplicate components");
+  static_assert(unique_types_v<Components...>, "Archetypes components must be unique");
   static_assert(std::conjunction_v<std::is_same<Components, std::remove_cv_t<Components>>...>, "Archetype components cannot be cv-qualified (const or volatile)");
-  static_assert(std::conjunction_v<std::is_default_constructible<Components>...>, "Archetype components must be default constructible");
-  static_assert(std::conjunction_v<std::is_move_assignable<Components>...>, "Archetype components must be move assignable");
-  static_assert(std::conjunction_v<std::is_move_constructible<Components>...>, "Archetype components must be move constructible");
-  static_assert(std::conjunction_v<std::is_copy_assignable<Components>...>, "Archetype components must be copy assignable");
-  static_assert(std::conjunction_v<std::is_copy_constructible<Components>...>, "Archetype components myst be copy constructible");
+  static_assert(std::conjunction_v<std::is_trivial<Components>...>, "Archetype components must trival (see std::is_trivial)");
 };
 
 namespace internal
