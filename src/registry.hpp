@@ -78,7 +78,6 @@ public:
   auto view() { return basic_view<Components...> { this }; }
 
 private:
-
   template<typename Archetype>
   storage<entity_type, Archetype>& access() { return std::get<storage<entity_type, Archetype>>(_pool); }
 
@@ -250,10 +249,10 @@ template<typename Entity, typename... Archetypes>
 template<typename... Components>
 Entity registry<Entity, list<Archetypes...>>::create(const Components&... components)
 {
-  static_assert(size_v<prune_for_t<list<Archetypes...>, Components...>> > 0,
-    "Registry does not contain suitable archetype for provided components");
-
   using current = find_for_t<list<Archetypes...>, Components...>;
+
+  static_assert(size_v<current> == sizeof...(Components),
+    "Registry does not contain suitable archetype for provided components");
 
   const entity_type entity = _manager.generate();
 
@@ -290,5 +289,4 @@ void registry<Entity, list<Archetypes...>>::optimize()
   _manager.swap();
   _manager.shrink_to_fit();
 }
-
 } // namespace ecs
