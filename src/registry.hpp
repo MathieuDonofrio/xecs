@@ -11,6 +11,7 @@
 #include <limits>
 #include <memory>
 #include <stdexcept>
+#include <string>
 #include <tuple>
 #include <utility>
 
@@ -30,10 +31,7 @@ public:
   using pool_type = std::tuple<storage<entity_type, Archetypes>...>;
   using shared_type = internal::sparse_array<entity_type>;
 
-  static_assert(std::numeric_limits<entity_type>::is_integer && !std::numeric_limits<entity_type>::is_signed,
-    "Entity must be an unsigned integer");
-  static_assert(sizeof...(Archetypes) > 0,
-    "Registry must contain atleast one archetype");
+  static_assert(sizeof...(Archetypes) > 0, "Registry must contain atleast one archetype");
 
 private:
   template<typename... Components>
@@ -60,7 +58,7 @@ public:
   void for_each(const Func& func) { view<Components...>().for_each(func); }
 
   template<typename Component>
-  Component& unpack(const entity_type entity) { return view<Component>().template unpack<Component>(); }
+  Component& unpack(const entity_type entity) { return view<Component>().template unpack<Component>(entity); }
 
   template<typename... Components>
   bool has(const entity_type entity) { return view<Components...>().contains(entity); }
@@ -94,6 +92,8 @@ class registry<Entity, list<Archetypes...>>::basic_view
 public:
   using archetype_list_view_type = prune_for_t<archetype_list_type, Components...>;
 
+  static_assert(size_v<archetype_list_view_type> > 0, "View must contain atleast one archetype");
+
 public:
   basic_view(registry_type* registry) : _registry { registry } {}
 
@@ -103,7 +103,7 @@ public:
   template<size_t I = 0>
   void erase(const entity_type entity);
 
-  template<size_t I = 0, typename Component>
+  template<typename Component, size_t I = 0>
   Component& unpack(const entity_type entity);
 
   template<size_t I = 0>
@@ -123,17 +123,14 @@ void registry<Entity, list<Archetypes...>>::basic_view<Components...>::for_each(
 {
   using current = at_t<I, archetype_list_view_type>;
 
-  if constexpr (I < size_v<archetype_list_view_type>)
+  auto& storage = _registry->template access<current>();
+
+  for (auto it = storage.begin(); it != storage.end(); ++it)
   {
-    auto& storage = _registry->template access<current>();
-
-    for (auto it = storage.begin(); it != storage.end(); ++it)
-    {
-      func(*it, it.template unpack<Components>()...);
-    }
-
-    for_each<I + 1>(func);
+    func(*it, it.template unpack<Components>()...);
   }
+
+  if constexpr (I + 1 < size_v<archetype_list_view_type>) for_each<I + 1>(func);
 }
 
 template<typename Entity, typename... Archetypes>
@@ -143,7 +140,8 @@ void registry<Entity, list<Archetypes...>>::basic_view<Components...>::erase(con
 {
   using current = at_t<I, archetype_list_view_type>;
 
-  if constexpr (I == size_v<archetype_list_view_type>) throw std::invalid_argument("Entity does not exist!");
+  if constexpr (I == size_v<archetype_list_view_type>)
+    throw std::invalid_argument("Entity " + std::to_string(entity) + " does not exist in view!");
   else
   {
     auto& storage = _registry->template access<current>();
@@ -152,24 +150,24 @@ void registry<Entity, list<Archetypes...>>::basic_view<Components...>::erase(con
     else
       erase<I + 1>(entity);
   }
-  (void)entity; // Suppress warning
 }
 
 template<typename Entity, typename... Archetypes>
 template<typename... Components>
-template<size_t I, typename Component>
+template<typename Component, size_t I>
 Component& registry<Entity, list<Archetypes...>>::basic_view<Components...>::unpack(const entity_type entity)
 {
   using current = at_t<I, archetype_list_view_type>;
 
-  if constexpr (I == size_v<archetype_list_view_type>) throw std::invalid_argument("Entity does not exist!");
+  if constexpr (I == size_v<archetype_list_view_type>)
+    throw std::invalid_argument("Entity " + std::to_string(entity) + " does not exist in view!");
   else
   {
     auto& storage = _registry->template access<current>();
 
-    if (storage.contains(entity)) return storage.template unpack<Component>();
+    if (storage.contains(entity)) return storage.template unpack<Component>(entity);
     else
-      return unpack<I + 1>(entity);
+      return unpack<Component, I + 1>(entity);
   }
 }
 
@@ -180,9 +178,9 @@ bool registry<Entity, list<Archetypes...>>::basic_view<Components...>::contains(
 {
   using current = at_t<I, archetype_list_view_type>;
 
-  if constexpr (I == size_v<archetype_list_view_type>) return false;
-  else if (_registry->template access<current>().contains(entity))
-    return true;
+  if (_registry->template access<current>().contains(entity)) return true;
+
+  if constexpr (I + 1 == size_v<archetype_list_view_type>) return false;
   else
     return contains<I + 1>(entity);
 }

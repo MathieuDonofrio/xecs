@@ -18,6 +18,9 @@ public:
   using entity_type = Entity;
   using size_type = size_t;
 
+  static_assert(std::numeric_limits<entity_type>::is_integer && !std::numeric_limits<entity_type>::is_signed,
+    "Entity type must be an unsigned integer");
+
   static constexpr size_type stack_capacity = ENTITY_MANAGER_STACK_SIZE / sizeof(entity_type);
   static constexpr size_type minimum_heap_capacity = stack_capacity * 2;
 
