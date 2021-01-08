@@ -58,6 +58,20 @@ static_assert(is_same_types_v<list<bool, float, int>, list<int, bool, float>> ==
 static_assert(is_same_types_v<list<float, bool, int>, list<int, float, bool>> == true, "");
 static_assert(is_same_types_v<list<bool, float, int, double>, list<int, bool, float>> == false, "");
 
+static_assert(unique_lists_v<list<int>> == true, "");
+static_assert(unique_lists_v<list<int>, list<int>> == false, "");
+static_assert(unique_lists_v<list<int, float>, list<int>> == true, "");
+static_assert(unique_lists_v<list<float, int>, list<int>> == true, "");
+static_assert(unique_lists_v<list<float, int>, list<float, int>> == false, "");
+static_assert(unique_lists_v<list<float, int>, list<int, float>> == false, "");
+static_assert(unique_lists_v<list<int, float>, list<int, float>> == false, "");
+static_assert(unique_lists_v<list<int, float>, list<float, int>> == false, "");
+static_assert(unique_lists_v<list<int, float>, list<float, int, bool>> == true, "");
+static_assert(unique_lists_v<list<bool, int, float>, list<float, int, bool>> == false, "");
+static_assert(unique_lists_v<list<bool, int, float>, list<bool, int, float>> == false, "");
+static_assert(unique_lists_v<list<bool, float, int>, list<bool, int, float>> == false, "");
+static_assert(unique_lists_v<list<bool, float, int, double>, list<bool, int, float>> == true, "");
+
 static_assert(std::is_same_v<list<int>, concat_t<int, list<>>>, "");
 static_assert(std::is_same_v<list<int, float>, concat_t<int, list<float>>>, "");
 static_assert(std::is_same_v<list<double, bool, float>, concat_t<double, list<bool, float>>>, "");

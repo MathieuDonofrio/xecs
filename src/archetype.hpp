@@ -74,6 +74,18 @@ struct is_same_types<AList<ATypes...>, BList<BTypes...>>
 template<typename AList, typename BList>
 inline constexpr auto is_same_types_v = is_same_types<AList, BList>::value;
 
+template<typename... Lists>
+struct unique_lists : std::true_type
+{};
+
+template<typename List, typename... Lists>
+struct unique_lists<List, Lists...>
+  : std::conjunction<std::negation<std::disjunction<is_same_types<List, Lists>...>>, unique_lists<Lists...>>
+{};
+
+template<typename... Lists>
+inline constexpr auto unique_lists_v = unique_lists<Lists...>::value;
+
 template<typename Type, typename List>
 struct concat;
 
@@ -153,12 +165,32 @@ public:
 template<size_t I, typename List>
 using at_t = typename at<I, List>::type;
 
-template<typename... Components>
-struct archetype : list<Components...>
+template<typename Component>
+struct verify_component
 {
-  static_assert(unique_types_v<Components...>, "Archetypes components must be unique");
-  static_assert(std::conjunction_v<std::is_same<Components, std::remove_cv_t<Components>>...>, "Archetype components cannot be cv-qualified (const or volatile)");
-  static_assert(std::conjunction_v<std::is_trivial<Components>...>, "Archetype components must trival (see std::is_trivial)");
+  static_assert(std::is_same_v<Component, std::remove_cv_t<Component>>, "Component cannot be cv-qualified (const or volatile)");
+  static_assert(std::is_trivial_v<Component>, "Component must be trival (JUST DATA. no constructors, destructors...)");
+};
+
+template<typename... Components>
+using archetype = list<Components...>;
+
+template<typename Archetype>
+struct verify_archetype;
+
+template<typename... Components>
+struct verify_archetype<archetype<Components...>> : verify_component<Components>...
+{
+  static_assert(unique_types_v<Components...>, "Every components must be unique (archetype is a SET of components)");
+};
+
+template<typename ArchetypeList>
+struct verify_archetype_list;
+
+template<typename... Archetypes>
+struct verify_archetype_list<list<Archetypes...>> : verify_archetype<Archetypes>...
+{
+  static_assert(unique_lists_v<Archetypes...>, "Every archetype must be unique (regardless of component order)");
 };
 
 namespace internal

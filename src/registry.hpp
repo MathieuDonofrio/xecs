@@ -20,7 +20,7 @@ template<typename Entity, typename ArchetypeRegistry>
 class registry;
 
 template<typename Entity, typename... Archetypes>
-class registry<Entity, list<Archetypes...>>
+class registry<Entity, list<Archetypes...>> : verify_archetype_list<list<Archetypes...>>
 {
 public:
   using entity_type = Entity;
@@ -36,7 +36,6 @@ public:
     "Registry must contain atleast one archetype");
 
 private:
-
   template<typename... Components>
   class basic_view
   {
