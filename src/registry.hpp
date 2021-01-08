@@ -37,35 +37,7 @@ public:
 
 private:
   template<typename... Components>
-  class basic_view
-  {
-  public:
-    using archetype_list_view_type = prune_for_t<archetype_list_type, Components...>;
-
-  public:
-    basic_view(registry_type* registry) : _registry { registry } {}
-
-    template<size_t I = 0, typename Func>
-    void for_each(const Func& func);
-
-    template<size_t I = 0>
-    void erase(const entity_type entity);
-
-    template<size_t I = 0>
-    void set(const entity_type entity, Components&&... components);
-
-    template<size_t I = 0, typename Component>
-    Component& get(const entity_type entity);
-
-    template<size_t I = 0>
-    bool contains(const entity_type entity) const;
-
-    template<size_t I = 0>
-    size_t size() const;
-
-  private:
-    registry_type* _registry;
-  };
+  class basic_view;
 
 public:
   registry();
@@ -116,6 +88,38 @@ private:
   manager_type _manager;
   pool_type _pool;
   shared_type _shared;
+};
+
+template<typename Entity, typename... Archetypes>
+template<typename... Components>
+class registry<Entity, list<Archetypes...>>::basic_view
+{
+public:
+  using archetype_list_view_type = prune_for_t<archetype_list_type, Components...>;
+
+public:
+  basic_view(registry_type* registry) : _registry { registry } {}
+
+  template<size_t I = 0, typename Func>
+  void for_each(const Func& func);
+
+  template<size_t I = 0>
+  void erase(const entity_type entity);
+
+  template<size_t I = 0>
+  void set(const entity_type entity, Components&&... components);
+
+  template<size_t I = 0, typename Component>
+  Component& get(const entity_type entity);
+
+  template<size_t I = 0>
+  bool contains(const entity_type entity) const;
+
+  template<size_t I = 0>
+  size_t size() const;
+
+private:
+  registry_type* _registry;
 };
 
 template<typename Entity, typename... Archetypes>
