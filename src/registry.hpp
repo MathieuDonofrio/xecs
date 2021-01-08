@@ -77,10 +77,11 @@ public:
   template<typename... Components>
   auto view() { return basic_view<Components...> { this }; }
 
+private:
+
   template<typename Archetype>
   storage<entity_type, Archetype>& access() { return std::get<storage<entity_type, Archetype>>(_pool); }
 
-private:
   template<size_t I = 0>
   void setup_shared_memory();
 
