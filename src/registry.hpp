@@ -57,7 +57,7 @@ public:
   void optimize();
 
   template<typename... Components, typename Func>
-  void for_each(Func& func) { view<Components...>().for_each(func); }
+  void for_each(const Func& func) { view<Components...>().for_each(func); }
 
   template<typename... Components>
   void set(const entity_type entity, Components&&... components) { return view<Components...>().set(entity, components...); }
@@ -159,6 +159,7 @@ void registry<Entity, list<Archetypes...>>::basic_view<Components...>::erase(con
     else
       erase<I + 1>(entity);
   }
+  (void)entity; // Suppress warning
 }
 
 template<typename Entity, typename... Archetypes>
