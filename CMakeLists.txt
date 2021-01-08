@@ -29,7 +29,7 @@ if(MSVC)
 else()
   add_compile_options(
     -Wall -Wextra -Wpedantic
-    $<$<CONFIG:Debug>:-O0 -g>
+    $<$<CONFIG:Debug>:-O0>
     $<$<CONFIG:Release>:-O3>
   )
 endif()
@@ -46,10 +46,20 @@ target_compile_features(ECS INTERFACE cxx_std_17)
 # Tests
 #
 
-option(ECS_BUILD_TESTING "Enable building with tests (includes benchmark)" OFF)
+option(ECS_BUILD_TESTING "Enable building with tests" OFF)
 
 if(ECS_BUILD_TESTING)
   include(CTest)
   enable_testing()
   add_subdirectory(test)
+endif()
+
+#
+# Benchmarks
+#
+
+option(ECS_BUILD_BENCHMARKING "Enable building with benchmarks" OFF)
+
+if(ECS_BUILD_BENCHMARKING)
+  add_subdirectory(bench)
 endif()
