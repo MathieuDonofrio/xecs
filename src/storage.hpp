@@ -151,6 +151,7 @@ namespace internal
     using size_type = size_t;
     using page_type = entity_type*;
     using array_type = page_type*;
+    using shared_count_type = uint16_t;
 
     static constexpr size_type entites_per_page = SPARSE_ARRAY_PAGE_SIZE / sizeof(entity_type);
     static constexpr size_type page_shift = log2(entites_per_page);
@@ -174,13 +175,13 @@ namespace internal
 
     size_type pages() const { return _pages; }
 
-    void make_shared() { _shared = true; }
-    bool shared() const { return _shared; }
+    void make_shared() { _shared++; }
+    shared_count_type shared() const { return _shared; }
 
   private:
     array_type _array;
     size_type _pages;
-    bool _shared;
+    shared_count_type _shared;
   };
 
   template<typename Entity>

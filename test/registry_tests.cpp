@@ -3,6 +3,61 @@
 
 using namespace ecs;
 
+TEST(Registry, Storages_OneArchetype_OneStorages)
+{
+  using entity_type = unsigned int;
+  using registered_archetypes = archetype_list_builder::
+    add<archetype<int>>::
+      build;
+
+  registry<entity_type, registered_archetypes> registry;
+
+  ASSERT_EQ(registry.storages(), 1);
+}
+
+TEST(Registry, Storages_TwoArchetypes_TwoStorages)
+{
+  using entity_type = unsigned int;
+  using registered_archetypes = archetype_list_builder::
+    add<archetype<int>>::
+      add<archetype<float>>::
+        build;
+
+  registry<entity_type, registered_archetypes> registry;
+
+  ASSERT_EQ(registry.storages(), 2);
+}
+
+TEST(Registry, Storages_ThreeArchetypes_ThreeStorages)
+{
+  using entity_type = unsigned int;
+  using registered_archetypes = archetype_list_builder::
+    add<archetype<int>>::
+      add<archetype<float>>::
+        add<archetype<int, float>>::
+          build;
+
+  registry<entity_type, registered_archetypes> registry;
+
+  ASSERT_EQ(registry.storages(), 3);
+}
+
+TEST(Registry, Storages_FiveArchetypes_FiveStorages)
+{
+  using entity_type = unsigned int;
+  using registered_archetypes = archetype_list_builder::
+    add<archetype<int>>::
+      add<archetype<float>>::
+        add<archetype<int, float>>::
+          add<archetype<double>>::
+            add<archetype<float, double>>::
+              build;
+
+  registry<entity_type, registered_archetypes> registry;
+
+  ASSERT_EQ(registry.storages(), 5);
+}
+
 TEST(Registry, Empty_AfterInitialization_True)
 {
   using entity_type = unsigned int;

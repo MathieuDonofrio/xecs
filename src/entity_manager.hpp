@@ -49,14 +49,14 @@ public:
   size_type heap_capacity() const { return _heap_capacity; }
 
 private:
-  stack_buffer_type _stack_buffer;
-  size_type _stack_reusable;
+  entity_type _current;
 
-  heap_buffer_type _heap_buffer;
+  size_type _stack_reusable;
   size_type _heap_reusable;
   size_type _heap_capacity;
 
-  entity_type _current;
+  heap_buffer_type _heap_buffer;
+  stack_buffer_type _stack_buffer;
 };
 
 template<typename Entity>
