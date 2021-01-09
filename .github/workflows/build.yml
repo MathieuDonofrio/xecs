@@ -18,7 +18,51 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Create Build Environment      
+      shell: bash
+
+      run: mkdir build
       
+    - name: Build
+      shell: bash
+      working-directory: ${{github.workspace}}/build
+      env:
+        CXX: ${{ matrix.compiler }}
+
+      run: |
+        cmake -DECS_BUILD_TESTING=ON ..
+        make
+
+    - name: Test
+      working-directory: ${{github.workspace}}/build
+      shell: bash
+
+      run: ctest -C $BUILD_TYPE
+
+  windows:
+    timeout-minutes: 10
+    
+    strategy:
+      matrix:
+        os: [windows-latest, windows-2016]
+        toolset: [clang-cl, default, v141]
+        include:
+          - toolset: clang-cl
+            toolset_option: -T"ClangCl"
+          - toolset: v141
+            toolset_option: -T"v141"
+        exclude:
+          - os: windows-2016
+            toolset: clang-cl
+          - os: windows-2016
+            toolset: v141
+    
+    runs-on: ${{ matrix.os }}
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Create Build Environment      
+      shell: bash
+
       run: mkdir build
       
     - name: Build
@@ -29,8 +73,8 @@ jobs:
         CXX: ${{ matrix.compiler }}
 
       run: |
-        cmake -DECS_BUILD_TESTING=ON -DCMAKE_BUILD_TYPE=$BUILD_TYPE ..
-        make
+        cmake -DECS_BUILD_TESTING=ON ${{ matrix.toolset_option }} ..
+        cmake --build .
 
     - name: Test
       working-directory: ${{github.workspace}}/build
