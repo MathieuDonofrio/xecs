@@ -60,7 +60,7 @@ TEST(Registry, Unpack_EntityThatDoesntExist_Throw)
   catch (const std::exception&)
   {};
 
-  ASSERT_EQ(registry.unpack<float>(entity1), 0.5f);
+  ASSERT_EQ(registry.unpack<float>(entity2), 0.5f);
 }
 
 TEST(Registry, ForEach_Single_SameValues)
