@@ -1,0 +1,44 @@
+name: coverage
+
+on: [push, pull_request]
+
+jobs:
+
+  coverage:
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Create Build Environment
+        
+        run: mkdir build
+
+      - name: Run a multi-line script
+      - name: Build
+        shell: bash
+        working-directory: ${{github.workspace}}/build
+        env:
+          CXXFLAGS: "-O0 --coverage -fno-inline -fno-inline-small-functions -fno-default-inline"
+          CXX: g++
+
+        run: |
+          cmake -DECS_BUILD_TESTING=ON ..
+          make
+          
+      - name: Test
+        working-directory: ${{github.workspace}}/build
+        env:
+          CTEST_OUTPUT_ON_FAILURE: 1
+
+        run: ctest -C $BUILD_TYPE
+
+      - name: Coverage
+        working-directory: ${{github.workspace}}/build
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+        run: |
+          wget https://codecov.io/bash -O codecov
+          chmod +x codecov
+          ./codecov -t $CODECOV_TOKEN -B $GITHUB_REF -s .
