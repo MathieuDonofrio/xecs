@@ -1,0 +1,39 @@
+name: build
+
+on: [push, pull_request]
+
+env:
+  BUILD_TYPE: Debug
+
+jobs:
+  linux:
+    timeout-minutes: 10
+    
+    strategy:
+      matrix:
+        compiler: [g++, clang++]
+    
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Create Build Environment      
+      
+      run: mkdir build
+      
+    - name: Build
+
+      shell: bash
+      working-directory: ${{github.workspace}}/build
+      env:
+        CXX: ${{ matrix.compiler }}
+
+      run: |
+        cmake -DECS_BUILD_TESTING=ON -DCMAKE_BUILD_TYPE=$BUILD_TYPE ..
+        make
+
+    - name: Test
+      working-directory: ${{github.workspace}}/build
+      shell: bash
+
+      run: ctest -C $BUILD_TYPE
