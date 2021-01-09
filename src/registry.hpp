@@ -145,7 +145,7 @@ Component& registry<Entity, list<Archetypes...>>::basic_view<Components...>::unp
   using current = at_t<I, archetype_list_view_type>;
 
   if constexpr (I == size_v<archetype_list_view_type>)
-    throw std::invalid_argument("Entity " + std::to_string(entity) + " does not exist in view!");
+    throw std::invalid_argument("Entity " + std::to_string(entity) + " does not exist in the view!");
   else
   {
     auto& storage = _registry->template access<current>();
@@ -190,7 +190,7 @@ void registry<Entity, list<Archetypes...>>::basic_view<Components...>::erase(con
   using current = at_t<I, archetype_list_view_type>;
 
   if constexpr (I == size_v<archetype_list_view_type>)
-    throw std::invalid_argument("Entity " + std::to_string(entity) + " does not exist in view!");
+    throw std::invalid_argument("Entity " + std::to_string(entity) + " does not exist in the view!");
   else
   {
     auto& storage = _registry->template access<current>();
