@@ -9,7 +9,7 @@ namespace ecs
 {
 
 /**
- * @brief list of types.
+ * @brief List of types.
  * 
  * Similar to a tuple, but cannot contain any data. 
  * This is used heavily for our compile-time meta programming.
@@ -21,7 +21,7 @@ struct list
 {};
 
 /**
- * @brief finds size of a list (amount of types).
+ * @brief Finds size of a list (amount of types).
  * 
  * @tparam List list of types
  */
@@ -36,7 +36,7 @@ template<typename List>
 inline constexpr auto size_v = size<List>::value;
 
 /**
- * @brief checks if a list is empty.
+ * @brief Checks if a list is empty.
  * 
  * @tparam List list of types
  */
@@ -51,7 +51,7 @@ template<typename List>
 inline constexpr auto empty_v = empty<List>::value;
 
 /**
- * @brief checks if a list contains a type.
+ * @brief Checks if a list contains a type.
  * 
  * @tparam Type type to check for
  * @tparam List list to check
@@ -64,7 +64,7 @@ struct contains<Type, List<Types...>> : std::disjunction<std::is_same<Type, Type
 {};
 
 /**
- * @brief utility for contains value.
+ * @brief Utility for contains value.
  * 
  * @tparam Type type to check for
  * @tparam List list to check
@@ -73,7 +73,7 @@ template<typename Type, typename List>
 inline constexpr auto contains_v = contains<Type, List>::value;
 
 /**
- * @brief checks if list contains atleast all required types.
+ * @brief Checks if list contains atleast all required types.
  * 
  * @tparam List list to check
  * @tparam Types required types
@@ -89,7 +89,7 @@ template<typename List, typename... Types>
 inline constexpr auto contains_all_v = contains_all<List, Types...>::value;
 
 /**
- * @brief checks if all types are unique.
+ * @brief Checks if all types are unique.
  * 
  * Types are determined not to be the same by std::is_same<T1, T2>.
  * 
@@ -108,7 +108,7 @@ template<typename... Types>
 inline constexpr auto unique_types_v = unique_types<Types...>::value;
 
 /**
- * @brief checks if two lists contain the same types.
+ * @brief Checks if two lists contain the same types.
  * 
  * Compares the size of both lists and checks if Blist contains all the types of AList.
  * 
@@ -127,7 +127,7 @@ template<typename AList, typename BList>
 inline constexpr auto is_same_types_v = is_same_types<AList, BList>::value;
 
 /**
- * @brief checks if all lists are unique in terms of types.
+ * @brief Checks if all lists are unique in terms of types.
  * 
  * This is different than unique_types because it ignores the order of
  * types contained by a list. unique_types would evaluate a list with the same types but in a
@@ -148,7 +148,7 @@ template<typename... Lists>
 inline constexpr auto unique_lists_v = unique_lists<Lists...>::value;
 
 /**
- * @brief concatenates a list and a type.
+ * @brief Concatenates a list and a type.
  * 
  * @tparam Type type to concatenate (add)
  * @tparam List list to concatenante type to
@@ -166,7 +166,7 @@ template<typename Type, typename List>
 using concat_t = typename concat<Type, List>::type;
 
 /**
- * @brief finds the first occurence of a list that.
+ * @brief Finds the first occurence of a list that.
  * 
  * This uses is_same_types, so the list to be found must contain all the specified types,
  * and only those types, nothing more, nothing less.
@@ -199,7 +199,7 @@ template<typename ListOfLists, typename... RequiredTypes>
 using find_for_t = typename find_for<ListOfLists, RequiredTypes...>::type;
 
 /**
- * @brief removes all lists that do not contains the required types.
+ * @brief Removes all lists that do not contains the required types.
  * 
  * This is used to create views at compile time.
  * 
@@ -230,7 +230,7 @@ template<typename ListOfLists, typename... RequiredTypes>
 using prune_for_t = typename prune_for<ListOfLists, RequiredTypes...>::type;
 
 /**
- * @brief finds the type at the specified index in the list.
+ * @brief Finds the type at the specified index in the list.
  * 
  * @tparam I index in list
  * @tparam List list to operate on
@@ -258,7 +258,7 @@ template<size_t I, typename List>
 using at_t = typename at<I, List>::type;
 
 /**
- * @brief assert's a component to verify that is is valid.
+ * @brief Assert's a component to verify that is is valid.
  * 
  * A valid component cannot be cv-qualified, that means it cant be const or volatile. And most importantly,
  * a component needs to be trivial, that means it cant contains constructors, destructors... EVERYTHING must
@@ -280,7 +280,7 @@ template<typename... Components>
 using archetype = list<Components...>;
 
 /**
- * @brief assert's a archetype to verify that it is valid.
+ * @brief Assert's a archetype to verify that it is valid.
  * 
  * A valid archetype must contain only valid components determined by verify_component. Additionnaly,
  * all components in an archetype must be unique.
@@ -299,7 +299,7 @@ struct verify_archetype<archetype<Components...>> : verify_component<Components>
 };
 
 /**
- * @brief assert's a list of archetypes.
+ * @brief Assert's a list of archetypes.
  * 
  * A valid list of archetypes must contain only valid archetypes determined by verify_archetype. Additionnaly,
  * all archetypes in the list must be unique.
@@ -330,7 +330,7 @@ namespace internal
 } // namespace internal
 
 /**
- * @brief compile-time builder pattern for creating lists of archetypes.
+ * @brief Compile-time builder pattern for creating lists of archetypes.
  * 
  * Alternative to building archetype lists manually that may provide better readability.
  */

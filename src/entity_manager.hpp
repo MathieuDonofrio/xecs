@@ -12,6 +12,29 @@ static_assert((ENTITY_MANAGER_STACK_SIZE & (ENTITY_MANAGER_STACK_SIZE - 1)) == 0
 
 namespace ecs
 {
+
+/**
+ * @brief Manager responsible for distributing entities.
+ * 
+ * An entity manager is essentially a class responsible for generating and recycling entities. And
+ * entities are simply just identifiers.
+ * 
+ * For an enitity to be valid is must be an unsigned integer.
+ * 
+ * The maximum amount of entities that can exist is equal to the maximum value of the entity. 16 bit identifiers
+ * can allow for a maximum of 65535 entities. A 32 bit identifier is much larger and can support 4,294,967,295 entities.
+ * Anything more than 32 bit is probably overkill for the any game or simulation.
+ * 
+ * The entity manager is just a counter with a stack to be able to recycle entities.
+ * 
+ * This particular entity manager optimizes to use stack memory (could also be static memory). It contains 
+ * a small stack allocated on the stack and a bigger stack allocated on the heap. The size of the stack memory stack
+ * is defined by ENTITY_MANAGER_STACK_SIZE. When the size of recycled entities exceed this amount, the entity manager
+ * will then go to the heap. The manager will always priorize fetching from the stack. It is possible to swap recycled values
+ * accumulated in the heap memory stack into the stack memory stack
+ * 
+ * @tparam Entity unsigned integer type to represent entity
+ */
 template<typename Entity>
 class entity_manager
 {
@@ -22,7 +45,17 @@ public:
   static_assert(std::numeric_limits<entity_type>::is_integer && !std::numeric_limits<entity_type>::is_signed,
     "Entity type must be an unsigned integer");
 
+  /**
+   * @brief fixed capacity of entities for stack memory stack.
+   * 
+   */
   static constexpr size_type stack_capacity = ENTITY_MANAGER_STACK_SIZE / sizeof(entity_type);
+
+  /**
+   * @brief minimum capacity on entities for the heap memory stack.
+   * 
+   * Twice as big as stack.
+   */
   static constexpr size_type minimum_heap_capacity = stack_capacity * 2;
 
 public:
@@ -35,18 +68,86 @@ public:
   entity_manager& operator=(const entity_manager&) = delete;
   ~entity_manager();
 
-  entity_type generate();
+  /**
+   * @brief generates a unique entity.
+   * 
+   * This will try to obtain a recycled entity, but if none are available then the
+   * internal counter will be incremented.
+   * 
+   * @return entity_type the entity identifier generated
+   */
+  [[nodiscard]] entity_type generate();
+
+  /**
+   * @brief allows an entity to be reused.
+   * 
+   * This will add the entity to pools of reusable entities.
+   * 
+   * @param entity entity to release
+   */
   void release(entity_type entity);
+
+  /**
+   * @brief releases all entities at once.
+   * 
+   * Resets the internal counter and clears reusable entities.
+   * 
+   * This is a very cheap O(1) operation.
+   */
   void release_all();
 
-  entity_type peek() const { return _current; }
-
+  /**
+   * @brief moves reusable heap memory entites into stack memory as best as possible.
+   * 
+   * This can be good to call every once in a while to insure that we use stack memory
+   * as much as possible by moving the entities accumulated in the heap.
+   */
   void swap();
+
+  /**
+   * @brief shrinks the heap memory stack as much as possible.
+   * 
+   * The heap memory cannot be smaller than minimum_heap_capacity.
+   * 
+   * This is good to call every once in a while to optimize memory usage.
+   */
   void shrink_to_fit();
 
+  /**
+   * @brief reveals the current value of the internal counter.
+   * 
+   * @warning this value is not guaranted to be the next value to be generated.
+   * 
+   * @return entity_type next entity for internal counter.
+   */
+  [[nodiscard]] entity_type peek() const { return _current; }
+
+  /**
+   * @brief returns the amount of reusable entities that are in stack memory.
+   * 
+   * @return size_type amount of reusable entites in stack memory.
+   */
   size_type stack_reusable() const { return _stack_reusable; }
+
+  /**
+   * @brief returns the amount of reusable entities that are in heap memory.
+   * 
+   * @return size_type amount of reusable entites in heap memory.
+   */
   size_type heap_reusable() const { return _heap_reusable; }
+
+  /**
+   * @brief returns the total amount of reusable entities.
+   * 
+   * @return size_type reusable entities.
+   */
   size_type reusable() const { return _stack_reusable + _heap_reusable; }
+
+  /**
+   * @brief returns the current capacity of the heap memory stack.
+   * 
+   * @return size_type heap memory stack capacity
+   */
   size_type heap_capacity() const { return _heap_capacity; }
 
 private:
