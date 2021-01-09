@@ -184,7 +184,7 @@ TEST(Storage, Insert_TriggerGrowth)
 
   storage_type storage;
 
-  auto amount = 10000;
+  entity_type amount = 10000;
 
   for (entity_type i = 0; i < amount; i++)
   {
@@ -209,7 +209,7 @@ TEST(Storage, ShrinkToFit_MemoryOverhead)
 
   storage_type storage;
 
-  auto amount = 10000;
+  entity_type amount = 10000;
 
   for (entity_type i = 0; i < amount; i++)
   {
@@ -327,7 +327,7 @@ TEST(Storage, Iterator_CorrectIterations)
 
   ASSERT_EQ(storage.begin(), storage.end());
 
-  auto amount = 10000;
+  entity_type amount = 10000;
 
   for (entity_type i = 0; i < amount; i++)
   {
@@ -336,7 +336,7 @@ TEST(Storage, Iterator_CorrectIterations)
 
   ASSERT_NE(storage.begin(), storage.end());
 
-  int iterations = 0;
+  unsigned int iterations = 0;
 
   for (auto it = storage.begin(); it != storage.end(); ++it)
   {
@@ -400,7 +400,7 @@ TEST(StorageWithData, Insert_TriggerGrowth)
 
   storage_type storage;
 
-  auto amount = 10000;
+  entity_type amount = 10000;
 
   for (entity_type i = 0; i < amount; i++)
   {

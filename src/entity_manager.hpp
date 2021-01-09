@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <utility>
+#include <limits>
 
 #define ENTITY_MANAGER_STACK_SIZE 16384 // This should not be changed unless you know what your doing
 
@@ -61,7 +62,7 @@ private:
 
 template<typename Entity>
 entity_manager<Entity>::entity_manager()
-  : _stack_buffer(), _stack_reusable(0), _heap_reusable(0), _heap_capacity(minimum_heap_capacity), _current(0)
+  : _current(0), _stack_reusable(0), _heap_reusable(0), _heap_capacity(minimum_heap_capacity)
 {
   _heap_buffer = static_cast<heap_buffer_type>(std::malloc(minimum_heap_capacity * sizeof(entity_type)));
 }
