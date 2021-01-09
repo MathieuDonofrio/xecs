@@ -22,7 +22,7 @@ namespace internal
   class sparse_array;
 }
 template<typename Entity, typename Archetype>
-struct storage;
+class storage;
 
 template<typename Entity, typename... Components>
 class storage<Entity, archetype<Components...>> final

@@ -513,7 +513,7 @@ TEST(Registry, ForEach_SingleSet_SameValues)
 
   auto e = registry.create(5);
 
-  registry.for_each<int>([e](auto entity, auto& i)
+  registry.for_each<int>([e](auto, auto& i)
     { i = 10; });
 
   ASSERT_EQ(registry.unpack<int>(e), 10);

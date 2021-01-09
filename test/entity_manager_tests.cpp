@@ -75,7 +75,7 @@ TEST(EntityManager, Release_Multiple_Increment)
 
   entity_manager_type manager;
 
-  int amount = 100000;
+  size_t amount = 100000;
 
   std::vector<entity_type> entities;
 
