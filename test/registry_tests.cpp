@@ -246,7 +246,6 @@ TEST(Registry, Destroy_TwoArchetypes_SizeDecrease)
   try
   {
     registry.destroy<float>(entity1);
-    ASSERT_TRUE(false);
   }
   catch (const std::exception&)
   {};
@@ -256,7 +255,6 @@ TEST(Registry, Destroy_TwoArchetypes_SizeDecrease)
   try
   {
     registry.destroy<int>(entity2);
-    ASSERT_TRUE(false);
   }
   catch (const std::exception&)
   {};
@@ -501,8 +499,7 @@ TEST(Registry, Unpack_EntityThatDoesntExist_Throw)
 
   try
   {
-    registry.unpack<float>(entity1) = 2.5f;
-    ASSERT_TRUE(false);
+    registry.unpack<float>(entity1) = 15;
   }
   catch (const std::exception&)
   {};
@@ -512,12 +509,11 @@ TEST(Registry, Unpack_EntityThatDoesntExist_Throw)
   try
   {
     registry.unpack<int>(entity2);
-    ASSERT_TRUE(false);
   }
   catch (const std::exception&)
   {};
 
-  ASSERT_EQ(registry.unpack<float>(entity2), 0.5f);
+  ASSERT_EQ(registry.unpack<float>(entity2), 95.5f);
 }
 
 TEST(Registry, ForEach_Single_SameValues)
