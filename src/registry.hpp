@@ -27,7 +27,7 @@ public:
   using archetype_list_type = list<Archetypes...>;
   using registry_type = registry<entity_type, archetype_list_type>;
   using pool_type = std::tuple<storage<entity_type, Archetypes>...>;
-  using shared_type = internal::sparse_array<entity_type>;
+  using shared_type = sparse_array<entity_type>;
   using manager_type = entity_manager<entity_type>;
 
   static_assert(sizeof...(Archetypes) > 0, "Registry must contain atleast one archetype");

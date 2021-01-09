@@ -16,11 +16,59 @@ static_assert((SPARSE_ARRAY_PAGE_SIZE & (SPARSE_ARRAY_PAGE_SIZE - 1)) == 0, "SPA
 
 namespace ecs
 {
-namespace internal
+template<typename Entity>
+class sparse_array final
 {
-  template<typename Entity>
-  class sparse_array;
-}
+private:
+  static constexpr size_t log2(const size_t x)
+  {
+    size_t bit = 0;
+    while (bit != (8 * sizeof(size_t)))
+    {
+      if ((x >> bit) & 1) return bit;
+      ++bit;
+    }
+    return 0;
+  }
+
+public:
+  using entity_type = Entity;
+  using size_type = size_t;
+  using page_type = entity_type*;
+  using array_type = page_type*;
+  using shared_count_type = uint16_t;
+
+  static constexpr size_type entites_per_page = SPARSE_ARRAY_PAGE_SIZE / sizeof(entity_type);
+  static constexpr size_type page_shift = log2(entites_per_page);
+  static constexpr size_type offset_mask = ((1 << page_shift) - 1);
+
+  sparse_array();
+  sparse_array(const sparse_array&) = delete;
+  sparse_array(sparse_array&&) = delete;
+  ~sparse_array();
+
+  sparse_array& operator=(const sparse_array&) = delete;
+
+  void assure(const size_type page);
+
+  page_type operator[](const size_type page) const { return _array[page]; }
+  page_type& operator[](const size_type page) { return _array[page]; }
+
+  size_type page(const entity_type entity) const { return entity >> page_shift; }
+  size_type offset(const entity_type entity) const { return entity & offset_mask; }
+  size_type index(const entity_type entity) const { return _array[page(entity)][offset(entity)]; }
+
+  size_type pages() const { return _pages; }
+
+  void make_shared() { _shared++; }
+  shared_count_type shared() const { return _shared; }
+
+private:
+  array_type _array;
+  size_type _pages;
+  shared_count_type _shared;
+};
+
 template<typename Entity, typename Archetype>
 class storage;
 
@@ -34,7 +82,7 @@ public:
 private:
   using dense_type = entity_type*;
   using page_type = entity_type*;
-  using sparse_type = internal::sparse_array<Entity>*;
+  using sparse_type = sparse_array<Entity>*;
   using storage_type = std::tuple<Components*...>;
 
 public:
@@ -130,105 +178,50 @@ private:
   size_type _pos;
 };
 
-namespace internal
+template<typename Entity>
+sparse_array<Entity>::sparse_array()
+  : _pages(8), _shared(false)
 {
-  static constexpr size_t log2(const size_t x)
+  // This needs to be calloc because 0 pointers are used to determine if the page is allocated
+  _array = static_cast<array_type>(std::calloc(_pages, sizeof(page_type)));
+}
+
+template<typename Entity>
+sparse_array<Entity>::~sparse_array()
+{
+  for (size_type i = 0; i < _pages; i++)
+    if (_array[i]) free(_array[i]);
+  free(_array);
+}
+
+template<typename Entity>
+void sparse_array<Entity>::assure(const size_type page)
+{
+  if (page >= _pages)
   {
-    size_t bit = 0;
-    while (bit != (8 * sizeof(size_t)))
-    {
-      if ((x >> bit) & 1) return bit;
-      ++bit;
-    }
-    return 0;
+    // Make required amount the requested page + 1
+    // There does not seem to be any apperent performance gain by incrementing more than 1
+    const auto required = page + 1;
+
+    _array = static_cast<array_type>(std::realloc(_array, required * sizeof(page_type)));
+
+    // We need to set the new memory to 0 here because 0 pointers are used to determine if the page is allocated
+    std::memset(_array + _pages, 0, (required - _pages) * sizeof(page_type));
+
+    _pages = required;
   }
 
-  template<typename Entity>
-  class sparse_array final
+  if (!_array[page])
   {
-  public:
-    using entity_type = Entity;
-    using size_type = size_t;
-    using page_type = entity_type*;
-    using array_type = page_type*;
-    using shared_count_type = uint16_t;
-
-    static constexpr size_type entites_per_page = SPARSE_ARRAY_PAGE_SIZE / sizeof(entity_type);
-    static constexpr size_type page_shift = log2(entites_per_page);
-    static constexpr size_type offset_mask = ((1 << page_shift) - 1);
-
-    sparse_array();
-    sparse_array(const sparse_array&) = delete;
-    sparse_array(sparse_array&&) = delete;
-    ~sparse_array();
-
-    sparse_array& operator=(const sparse_array&) = delete;
-
-    void assure(const size_type page);
-
-    page_type operator[](const size_type page) const { return _array[page]; }
-    page_type& operator[](const size_type page) { return _array[page]; }
-
-    size_type page(const entity_type entity) const { return entity >> page_shift; }
-    size_type offset(const entity_type entity) const { return entity & offset_mask; }
-    size_type index(const entity_type entity) const { return _array[page(entity)][offset(entity)]; }
-
-    size_type pages() const { return _pages; }
-
-    void make_shared() { _shared++; }
-    shared_count_type shared() const { return _shared; }
-
-  private:
-    array_type _array;
-    size_type _pages;
-    shared_count_type _shared;
-  };
-
-  template<typename Entity>
-  sparse_array<Entity>::sparse_array()
-    : _pages(8), _shared(false)
-  {
-    // This needs to be calloc because 0 pointers are used to determine if the page is allocated
-    _array = static_cast<array_type>(std::calloc(_pages, sizeof(page_type)));
+    _array[page] = static_cast<page_type>(std::malloc(SPARSE_ARRAY_PAGE_SIZE));
   }
-
-  template<typename Entity>
-  sparse_array<Entity>::~sparse_array()
-  {
-    for (size_type i = 0; i < _pages; i++)
-      if (_array[i]) free(_array[i]);
-    free(_array);
-  }
-
-  template<typename Entity>
-  void sparse_array<Entity>::assure(const size_type page)
-  {
-    if (page >= _pages)
-    {
-      // Make required amount the requested page + 1
-      // There does not seem to be any apperent performance gain by incrementing more than 1
-      const auto required = page + 1;
-
-      _array = static_cast<array_type>(std::realloc(_array, required * sizeof(page_type)));
-
-      // We need to set the new memory to 0 here because 0 pointers are used to determine if the page is allocated
-      std::memset(_array + _pages, 0, (required - _pages) * sizeof(page_type));
-
-      _pages = required;
-    }
-
-    if (!_array[page])
-    {
-      _array[page] = static_cast<page_type>(std::malloc(SPARSE_ARRAY_PAGE_SIZE));
-    }
-  }
-} // namespace internal
+}
 
 template<typename Entity, typename... Components>
 storage<Entity, archetype<Components...>>::storage()
   : _size { 0 }, _capacity { 0 }
 {
-  _sparse = new internal::sparse_array<entity_type>();
+  _sparse = new sparse_array<entity_type>();
   _dense = static_cast<dense_type>(std::malloc(_capacity * sizeof(entity_type)));
   ((access<Components>() = static_cast<Components*>(std::malloc(_capacity * sizeof(Components)))), ...);
 }
