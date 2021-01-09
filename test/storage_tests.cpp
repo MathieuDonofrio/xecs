@@ -168,7 +168,7 @@ TEST(Storage, Insert_TriggerSparseGrowth)
 
   storage_type storage;
 
-  entity_type bigValue = 9999999999;
+  entity_type bigValue = 999999;
 
   storage.insert(bigValue);
 
