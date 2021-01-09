@@ -508,12 +508,12 @@ TEST(Registry, Unpack_EntityThatDoesntExist_Throw)
 
   try
   {
-    registry.unpack<int>(entity2);
+    registry.unpack<int>(entity2) = 50.5f;
   }
   catch (const std::exception&)
   {};
 
-  ASSERT_EQ(registry.unpack<float>(entity2), 95.5f);
+  ASSERT_EQ(registry.unpack<float>(entity2), 0.5f);
 }
 
 TEST(Registry, ForEach_Single_SameValues)
