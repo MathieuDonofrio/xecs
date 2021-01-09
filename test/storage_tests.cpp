@@ -340,7 +340,7 @@ TEST(Storage, Iterator_CorrectIterations)
 
   for (auto it = storage.begin(); it != storage.end(); ++it)
   {
-    ASSERT_TRUE(*it >= 0 && *it < amount);
+    ASSERT_TRUE(*it < amount);
     iterations++;
   }
 
