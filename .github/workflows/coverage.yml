@@ -14,7 +14,6 @@ jobs:
         
         run: mkdir build
 
-      - name: Run a multi-line script
       - name: Build
         shell: bash
         working-directory: ${{github.workspace}}/build
