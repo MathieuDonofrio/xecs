@@ -508,7 +508,7 @@ TEST(Registry, Unpack_EntityThatDoesntExist_Throw)
 
   try
   {
-    registry.unpack<int>(entity2) = 50.5f;
+    registry.unpack<int>(entity2) = 50;
   }
   catch (const std::exception&)
   {};

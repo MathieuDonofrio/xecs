@@ -7,14 +7,13 @@
 
 namespace ecs
 {
-
 /**
  * @brief List of types.
  * 
  * Similar to a tuple, but cannot contain any data. 
  * This is used heavily for our compile-time meta programming.
  * 
- * @tparam Types 
+ * @tparam Types All the types to be contained by the list
  */
 template<typename... Types>
 struct list
@@ -23,7 +22,7 @@ struct list
 /**
  * @brief Finds size of a list (amount of types).
  * 
- * @tparam List list of types
+ * @tparam List List of types
  */
 template<typename List>
 struct size;
@@ -38,7 +37,7 @@ inline constexpr auto size_v = size<List>::value;
 /**
  * @brief Checks if a list is empty.
  * 
- * @tparam List list of types
+ * @tparam List List of types
  */
 template<typename List>
 struct empty;
@@ -53,8 +52,8 @@ inline constexpr auto empty_v = empty<List>::value;
 /**
  * @brief Checks if a list contains a type.
  * 
- * @tparam Type type to check for
- * @tparam List list to check
+ * @tparam Type Type to check for
+ * @tparam List List to check
  */
 template<typename Type, typename List>
 struct contains;
@@ -66,8 +65,8 @@ struct contains<Type, List<Types...>> : std::disjunction<std::is_same<Type, Type
 /**
  * @brief Utility for contains value.
  * 
- * @tparam Type type to check for
- * @tparam List list to check
+ * @tparam Type Type to check for
+ * @tparam List List to check
  */
 template<typename Type, typename List>
 inline constexpr auto contains_v = contains<Type, List>::value;
@@ -75,8 +74,8 @@ inline constexpr auto contains_v = contains<Type, List>::value;
 /**
  * @brief Checks if list contains atleast all required types.
  * 
- * @tparam List list to check
- * @tparam Types required types
+ * @tparam List List to check
+ * @tparam Types Required types
  */
 template<typename List, typename... Types>
 struct contains_all;
@@ -93,7 +92,7 @@ inline constexpr auto contains_all_v = contains_all<List, Types...>::value;
  * 
  * Types are determined not to be the same by std::is_same<T1, T2>.
  * 
- * @tparam Types types to check
+ * @tparam Types Types to check
  */
 template<typename... Types>
 struct unique_types : std::true_type
@@ -112,8 +111,8 @@ inline constexpr auto unique_types_v = unique_types<Types...>::value;
  * 
  * Compares the size of both lists and checks if Blist contains all the types of AList.
  * 
- * @tparam AList a list of types
- * @tparam BList a list of types
+ * @tparam AList First list of types
+ * @tparam BList Second list of types
  */
 template<typename AList, typename BList>
 struct is_same_types;
@@ -133,7 +132,7 @@ inline constexpr auto is_same_types_v = is_same_types<AList, BList>::value;
  * types contained by a list. unique_types would evaluate a list with the same types but in a
  * different order as a different list.
  * 
- * @tparam Lists a list of lists
+ * @tparam Lists A list of lists
  */
 template<typename... Lists>
 struct unique_lists : std::true_type
@@ -150,8 +149,8 @@ inline constexpr auto unique_lists_v = unique_lists<Lists...>::value;
 /**
  * @brief Concatenates a list and a type.
  * 
- * @tparam Type type to concatenate (add)
- * @tparam List list to concatenante type to
+ * @tparam Type Type to concatenate (add)
+ * @tparam List List to concatenante type to
  */
 template<typename Type, typename List>
 struct concat;
@@ -173,8 +172,8 @@ using concat_t = typename concat<Type, List>::type;
  * 
  * This is used to find the correct type of list with the specified components for any given order.
  * 
- * @tparam ListOfLists list of lists
- * @tparam Types types of the list to find.
+ * @tparam ListOfLists A List of lists to search
+ * @tparam Types Exact contained types of the list to find.
  */
 template<typename ListOfLists, typename... Types>
 struct find_for;
@@ -203,7 +202,7 @@ using find_for_t = typename find_for<ListOfLists, RequiredTypes...>::type;
  * 
  * This is used to create views at compile time.
  * 
- * @tparam ListOfLists list of lists
+ * @tparam ListOfLists A List of lists to prune
  * @tparam RequiredTypes types that must be present in the list
  */
 template<typename ListOfLists, typename... RequiredTypes>
@@ -232,8 +231,8 @@ using prune_for_t = typename prune_for<ListOfLists, RequiredTypes...>::type;
 /**
  * @brief Finds the type at the specified index in the list.
  * 
- * @tparam I index in list
- * @tparam List list to operate on
+ * @tparam I Index in the list
+ * @tparam List The list to operate on
  */
 template<size_t I, typename List>
 struct at;
@@ -267,7 +266,7 @@ using at_t = typename at<I, List>::type;
  * Components must be strictly data. And we restrict at compile-time going beyond that.
  * These restrictions allows us to make some extra optimizations and enforces a performance by default philosophie.
  * 
- * @tparam Component 
+ * @tparam Component The component to verify
  */
 template<typename Component>
 struct verify_component
@@ -287,7 +286,7 @@ using archetype = list<Components...>;
  * 
  * Archetypes are essentially sets of components.
  * 
- * @tparam Archetype 
+ * @tparam Archetype The archetype to verify
  */
 template<typename Archetype>
 struct verify_archetype;
@@ -307,7 +306,7 @@ struct verify_archetype<archetype<Components...>> : verify_component<Components>
  * For two archetypes to be different, they must be of different sizes or contains different components.
  * Archetypes with the same components but in different orders do not count as unique.
  * 
- * @tparam ArchetypeList 
+ * @tparam ArchetypeList The archetype list to verify
  */
 template<typename ArchetypeList>
 struct verify_archetype_list;
@@ -332,9 +331,8 @@ namespace internal
 /**
  * @brief Compile-time builder pattern for creating lists of archetypes.
  * 
- * Alternative to building archetype lists manually that may provide better readability.
+ * Alternative to building archetype lists manually. This may provide better readability.
  */
 struct archetype_list_builder : internal::archetype_list_builder<>
 {};
-
 } // namespace ecs

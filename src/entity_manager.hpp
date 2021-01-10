@@ -2,8 +2,8 @@
 
 #include <cstdlib>
 #include <cstring>
-#include <utility>
 #include <limits>
+#include <utility>
 
 #define ENTITY_MANAGER_STACK_SIZE 16384 // This should not be changed unless you know what your doing
 
@@ -12,12 +12,11 @@ static_assert((ENTITY_MANAGER_STACK_SIZE & (ENTITY_MANAGER_STACK_SIZE - 1)) == 0
 
 namespace ecs
 {
-
 /**
  * @brief Manager responsible for distributing entities.
  * 
- * An entity manager is essentially a class responsible for generating and recycling entities. And
- * entities are simply just identifiers.
+ * An entity manager is essentially a class responsible for generating and recycling entities.
+ * Entities are simply just identifiers.
  * 
  * For an enitity to be valid is must be an unsigned integer.
  * 
@@ -46,13 +45,13 @@ public:
     "Entity type must be an unsigned integer");
 
   /**
-   * @brief fixed capacity of entities for stack memory stack.
+   * @brief Fixed capacity of entities for stack memory stack.
    * 
    */
   static constexpr size_type stack_capacity = ENTITY_MANAGER_STACK_SIZE / sizeof(entity_type);
 
   /**
-   * @brief minimum capacity on entities for the heap memory stack.
+   * @brief Minimum capacity on entities for the heap memory stack.
    * 
    * Twice as big as stack.
    */
@@ -62,30 +61,68 @@ public:
   using stack_buffer_type = entity_type[stack_capacity];
   using heap_buffer_type = entity_type*;
 
-  entity_manager();
+  /**
+   * @brief Construct a new entity manager object
+   * 
+   */
+  entity_manager()
+    : _current(0), _stack_reusable(0), _heap_reusable(0), _heap_capacity(minimum_heap_capacity)
+  {
+    _heap_buffer = static_cast<heap_buffer_type>(std::malloc(minimum_heap_capacity * sizeof(entity_type)));
+  }
+
+  /**
+   * @brief Destroy the entity manager object
+   */
+  ~entity_manager()
+  {
+    free(_heap_buffer);
+  }
+
   entity_manager(const entity_manager&) = delete;
   entity_manager(entity_manager&&) = delete;
   entity_manager& operator=(const entity_manager&) = delete;
-  ~entity_manager();
 
   /**
-   * @brief generates a unique entity.
+   * @brief Generates a unique entity.
    * 
    * This will try to obtain a recycled entity, but if none are available then the
    * internal counter will be incremented.
    * 
-   * @return entity_type the entity identifier generated
+   * @return entity_type The entity identifier generated
    */
-  [[nodiscard]] entity_type generate();
+  entity_type generate()
+  {
+    if (_stack_reusable) return _stack_buffer[--_stack_reusable];
+    else if (_heap_reusable)
+      return _heap_buffer[--_heap_reusable];
+    else
+      return _current++;
+  }
 
   /**
-   * @brief allows an entity to be reused.
+   * @brief Allows an entity to be reused.
    * 
    * This will add the entity to pools of reusable entities.
    * 
-   * @param entity entity to release
+   * @param entity Entity to release
    */
-  void release(entity_type entity);
+  void release(entity_type entity)
+  {
+    if (_stack_reusable < stack_capacity) _stack_buffer[_stack_reusable++] = entity;
+    else
+    {
+      // Heap resizing should not happen very often
+      if (_heap_reusable == _heap_capacity)
+      {
+        // Grow by a factor of 1.25
+        // This is ok since we know the heap capacity starts off as a large amount
+        _heap_capacity = (_heap_capacity * 5) / 3;
+        _heap_buffer = static_cast<heap_buffer_type>(std::realloc(_heap_buffer, _heap_capacity * sizeof(entity_type)));
+      }
+      _heap_buffer[_heap_reusable++] = entity;
+    }
+  }
 
   /**
    * @brief releases all entities at once.
@@ -94,7 +131,12 @@ public:
    * 
    * This is a very cheap O(1) operation.
    */
-  void release_all();
+  void release_all()
+  {
+    _stack_reusable = 0;
+    _heap_reusable = 0;
+    _current = 0;
+  }
 
   /**
    * @brief moves reusable heap memory entites into stack memory as best as possible.
@@ -102,53 +144,76 @@ public:
    * This can be good to call every once in a while to insure that we use stack memory
    * as much as possible by moving the entities accumulated in the heap.
    */
-  void swap();
+  void swap()
+  {
+    if (_heap_reusable && _stack_reusable != stack_capacity)
+    {
+      const auto stack_space = stack_capacity - _stack_reusable;
+      const auto swap_amount = _heap_reusable < stack_space ? _heap_reusable : stack_space;
+
+      void* dst_stack = static_cast<void*>(static_cast<entity_type*>(_stack_buffer) + _stack_reusable);
+      void* src_heap = _heap_buffer + _heap_reusable - swap_amount;
+
+      std::memcpy(dst_stack, src_heap, swap_amount * sizeof(entity_type));
+
+      _stack_reusable += swap_amount;
+      _heap_reusable -= swap_amount;
+    }
+  }
 
   /**
-   * @brief shrinks the heap memory stack as much as possible.
+   * @brief Resizes the heap memory stack to be as small possible.
    * 
    * The heap memory cannot be smaller than minimum_heap_capacity.
    * 
    * This is good to call every once in a while to optimize memory usage.
    */
-  void shrink_to_fit();
+  void shrink_to_fit()
+  {
+    if (_heap_reusable != _heap_capacity && _heap_reusable > minimum_heap_capacity)
+    {
+      _heap_capacity = _heap_reusable;
+
+      _heap_buffer = static_cast<heap_buffer_type>(std::realloc(_heap_buffer, _heap_capacity * sizeof(entity_type)));
+    }
+  }
 
   /**
-   * @brief reveals the current value of the internal counter.
+   * @brief Reveals the current value of the internal counter.
    * 
-   * @warning this value is not guaranted to be the next value to be generated.
+   * @warning This value is not guaranted to be the next value to be generated.
    * 
-   * @return entity_type next entity for internal counter.
+   * @return entity_type Next entity for internal counter
    */
   [[nodiscard]] entity_type peek() const { return _current; }
 
   /**
-   * @brief returns the amount of reusable entities that are in stack memory.
+   * @brief Returns the amount of reusable entities that are in stack memory.
    * 
-   * @return size_type amount of reusable entites in stack memory.
+   * @return size_type Amount of reusable entites in stack memory
    */
-  size_type stack_reusable() const { return _stack_reusable; }
+  [[nodiscard]] size_type stack_reusable() const { return _stack_reusable; }
 
   /**
-   * @brief returns the amount of reusable entities that are in heap memory.
+   * @brief Returns the amount of reusable entities that are in heap memory.
    * 
-   * @return size_type amount of reusable entites in heap memory.
+   * @return size_type amount of reusable entites in heap memory
    */
-  size_type heap_reusable() const { return _heap_reusable; }
+  [[nodiscard]] size_type heap_reusable() const { return _heap_reusable; }
 
   /**
-   * @brief returns the total amount of reusable entities.
+   * @brief Returns the total amount of reusable entities.
    * 
-   * @return size_type reusable entities.
+   * @return size_type Reusable entities
    */
-  size_type reusable() const { return _stack_reusable + _heap_reusable; }
+  [[nodiscard]] size_type reusable() const { return _stack_reusable + _heap_reusable; }
 
   /**
-   * @brief returns the current capacity of the heap memory stack.
+   * @brief Returns the current capacity of the heap memory stack.
    * 
-   * @return size_type heap memory stack capacity
+   * @return size_type Heap memory stack capacity
    */
-  size_type heap_capacity() const { return _heap_capacity; }
+  [[nodiscard]] size_type heap_capacity() const { return _heap_capacity; }
 
 private:
   entity_type _current;
@@ -160,82 +225,4 @@ private:
   heap_buffer_type _heap_buffer;
   stack_buffer_type _stack_buffer;
 };
-
-template<typename Entity>
-entity_manager<Entity>::entity_manager()
-  : _current(0), _stack_reusable(0), _heap_reusable(0), _heap_capacity(minimum_heap_capacity)
-{
-  _heap_buffer = static_cast<heap_buffer_type>(std::malloc(minimum_heap_capacity * sizeof(entity_type)));
-}
-
-template<typename Entity>
-entity_manager<Entity>::~entity_manager()
-{
-  free(_heap_buffer);
-}
-
-template<typename Entity>
-Entity entity_manager<Entity>::generate()
-{
-  if (_stack_reusable) return _stack_buffer[--_stack_reusable];
-  else if (_heap_reusable)
-    return _heap_buffer[--_heap_reusable];
-  else
-    return _current++;
-}
-
-template<typename Entity>
-void entity_manager<Entity>::release(const entity_type entity)
-{
-  if (_stack_reusable < stack_capacity) _stack_buffer[_stack_reusable++] = entity;
-  else
-  {
-    // Heap resizing should not happen very often
-    if (_heap_reusable == _heap_capacity)
-    {
-      // Grow by a factor of 1.25
-      // This is ok since we know the heap capacity starts off as a large amount
-      _heap_capacity = (_heap_capacity * 5) / 3;
-      _heap_buffer = static_cast<heap_buffer_type>(std::realloc(_heap_buffer, _heap_capacity * sizeof(entity_type)));
-    }
-    _heap_buffer[_heap_reusable++] = entity;
-  }
-}
-
-template<typename Entity>
-void entity_manager<Entity>::release_all()
-{
-  _stack_reusable = 0;
-  _heap_reusable = 0;
-  _current = 0;
-}
-
-template<typename Entity>
-void entity_manager<Entity>::swap()
-{
-  if (_heap_reusable && _stack_reusable != stack_capacity)
-  {
-    const auto stack_space = stack_capacity - _stack_reusable;
-    const auto swap_amount = _heap_reusable < stack_space ? _heap_reusable : stack_space;
-
-    void* dst_stack = static_cast<void*>(static_cast<entity_type*>(_stack_buffer) + _stack_reusable);
-    void* src_heap = _heap_buffer + _heap_reusable - swap_amount;
-
-    std::memcpy(dst_stack, src_heap, swap_amount * sizeof(entity_type));
-
-    _stack_reusable += swap_amount;
-    _heap_reusable -= swap_amount;
-  }
-}
-
-template<typename Entity>
-void entity_manager<Entity>::shrink_to_fit()
-{
-  if (_heap_reusable != _heap_capacity && _heap_reusable > minimum_heap_capacity)
-  {
-    _heap_capacity = _heap_reusable;
-
-    _heap_buffer = static_cast<heap_buffer_type>(std::realloc(_heap_buffer, _heap_capacity * sizeof(entity_type)));
-  }
-}
 } // namespace ecs
