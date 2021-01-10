@@ -9,6 +9,7 @@
 #include <memory>
 #include <tuple>
 #include <utility>
+#include <stdexcept>
 
 #define SPARSE_ARRAY_PAGE_SIZE 4096 // This should not be changed unless you know what your doing
 
