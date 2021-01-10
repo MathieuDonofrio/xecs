@@ -446,7 +446,7 @@ public:
   void share(const sparse_type sparse)
   {
     if (_size != 0)
-      throw new std::exception("You cannot share a sparse_array with a storage that is not empty");
+      throw new std::logic_error("You cannot share a sparse_array with a storage that is not empty");
 
     if (_sparse->shared()) _sparse->unshare();
     else
