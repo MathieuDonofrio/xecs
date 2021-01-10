@@ -283,7 +283,7 @@ public:
 
     // Default capacity is zero so we allocate nothing, but we still want the pointers
     _dense = static_cast<dense_type>(std::malloc(_capacity * sizeof(entity_type)));
-    (new_array<Components>(), ...);
+    (alloc_array<Components>(), ...);
   }
 
   /**
@@ -295,7 +295,7 @@ public:
     if (!_sparse->shared()) delete _sparse;
 
     free(_dense);
-    (delete_array<Components>(), ...);
+    (free_array<Components>(), ...);
   }
 
   storage(const storage&) = delete;
@@ -308,9 +308,9 @@ public:
    * Entities are always inserted in the back of the array, however they are not
    * guarented to stay there, and can be moved around by other operations.
    * 
-   * You can directly add the components with this method. This is not nessesary and can
-   * be done later very efficiently using the unpack method. Also, the order of the
-   * components dont matter, as long as they are all unique and part of the archetype.
+   * You can directly add the components with this method. However, components will be copied. 
+   * This is not nessesary and can be done later very efficiently using the unpack method. 
+   * Also, the order of the components dont matter, as long as they are all unique and part of the archetype.
    * 
    * This operation is usually O(1) and is pretty cheap. Some insert operations may be slower
    * if any internal array need a resize.
@@ -427,7 +427,7 @@ public:
       _capacity = _size;
 
       _dense = static_cast<dense_type>(std::realloc(_dense, _capacity * sizeof(entity_type)));
-      (resize_array<Components>(), ...);
+      (realloc_array<Components>(), ...);
     }
   }
 
@@ -512,6 +512,8 @@ private:
   /**
    * @brief Grows the sparse set allocated space.
    * 
+   * This grows the dense entity array and all the dense component arrays.
+   * 
    * Growth is exponential with a small linear amount.
    */
   void grow()
@@ -521,11 +523,21 @@ private:
     _capacity = (_capacity * 3) / 2 + 8;
 
     _dense = static_cast<dense_type>(std::realloc(_dense, _capacity * sizeof(entity_type)));
-    (resize_array<Components>(), ...);
+    (realloc_array<Components>(), ...);
   }
 
+  /**
+   * @brief Resizes the dense array for the specfied component type to the current capacity.
+   * 
+   * Uses realloc if the component type is trivial, otherwise will use new and moves data using
+   * std::copy and move iterators.
+   * 
+   * @note Using realloc is faster.
+   * 
+   * @tparam Component The component type of the dense array to resize.
+   */
   template<typename Component>
-  void resize_array()
+  void realloc_array()
   {
     if constexpr (std::is_trivial_v<Component>)
       access<Component>() = static_cast<Component*>(std::realloc(access<Component>(), _capacity * sizeof(Component)));
@@ -538,8 +550,17 @@ private:
     }
   }
 
+  /**
+   * @brief Allocates a new dense array for the specified component type.
+   * 
+   * Only used by the constructor.
+   * 
+   * @note Even if the default capacity is 0 this should be called.
+   * 
+   * @tparam Component The component type of the dense array to allocate.
+   */
   template<typename Component>
-  void new_array()
+  void alloc_array()
   {
     if constexpr (std::is_trivial_v<Component>)
       access<Component>() = static_cast<Component*>(std::malloc(_capacity * sizeof(Component)));
@@ -547,8 +568,15 @@ private:
       access<Component>() = new Component[_capacity];
   }
 
+  /**
+   * @brief Deallocates the dense array for the specified component type.
+   * 
+   * Only used by the destructor.
+   * 
+   * @tparam Component The component type of the dense array to deallocate.
+   */
   template<typename Component>
-  void delete_array()
+  void free_array()
   {
     if constexpr (std::is_trivial_v<Component>) free(access<Component>());
     else
