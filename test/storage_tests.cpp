@@ -533,15 +533,25 @@ TEST(StorageSharedSparse, IsShared_TwoStoragesInsertSingle_UsingSharedMemory)
   storage1.share(&shared);
   storage2.share(&shared);
 
-  ASSERT_TRUE(shared[shared.page(100)] == 0);
-  ASSERT_TRUE(shared.page(100000) > shared.pages());
-
   storage1.insert(100);
 
-  ASSERT_TRUE(shared[shared.page(100)] != 0);
+  ASSERT_TRUE(shared[100] == storage1.size() - 1);
 
   storage2.insert(100000);
 
-  ASSERT_TRUE(shared.page(100000) < shared.pages());
-  ASSERT_TRUE(shared[shared.page(100000)] != 0);
+  ASSERT_TRUE(shared[100000] == storage2.size() - 1);
+  ASSERT_TRUE(shared[100] == storage1.size() - 1);
+
+  storage1.insert(99999);
+
+  ASSERT_TRUE(shared[100] == storage1.size() - 2);
+  ASSERT_TRUE(shared[99999] == storage1.size() - 1);
+  ASSERT_TRUE(shared[100000] == storage2.size() - 1);
+
+  storage2.insert(453);
+
+  ASSERT_TRUE(shared[100] == storage1.size() - 2);
+  ASSERT_TRUE(shared[99999] == storage1.size() - 1);
+  ASSERT_TRUE(shared[100000] == storage2.size() - 2);
+  ASSERT_TRUE(shared[453] == storage2.size() - 1);
 }

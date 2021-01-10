@@ -66,7 +66,7 @@ public:
    * 
    */
   entity_manager()
-    : _current(0), _stack_reusable(0), _heap_reusable(0), _heap_capacity(minimum_heap_capacity)
+    : _current(0), _stack_reusable(0), _heap_reusable(0), _heap_capacity(minimum_heap_capacity), _stack_buffer()
   {
     _heap_buffer = static_cast<heap_buffer_type>(std::malloc(minimum_heap_capacity * sizeof(entity_type)));
   }

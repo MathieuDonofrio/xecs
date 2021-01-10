@@ -11,10 +11,6 @@
 #include <tuple>
 #include <utility>
 
-#define SPARSE_ARRAY_PAGE_SIZE 4096 // This should not be changed unless you know what your doing
-
-static_assert((SPARSE_ARRAY_PAGE_SIZE & (SPARSE_ARRAY_PAGE_SIZE - 1)) == 0, "SPARSE_ARRAY_PAGE_SIZE must be a power of two");
-
 namespace ecs
 {
 /**
@@ -29,76 +25,30 @@ namespace ecs
  * multiple storages, making them more scalable and efficient. All storages that use entites generated
  * by the same entity manager can share the same sparse_array (one registry has one sparse_array).
  * 
- * To make dynamically resizing this array cheaper as well as to reduce the amount of memory used 
- * in certain cases, this array implements paging. A page is a pointer to a fixed size array where 
- * the size is equal to the SPARSE_ARRAY_PAGE_SIZE.
+ * Paging is not nessesary here because if implmented correctly there should only be one sparse_array
+ * per entity_manager.
  * 
  * @tparam Entity unsigned int entity identifier
  */
 template<typename Entity>
 class sparse_array final
 {
-private:
-  /**
-   * @brief Utility method for computing base 2 log at compile-time
-   * 
-   * Does not need to be efficient, this is just used at compile-time. 
-   * Simply needs to work and be readable.
-   * 
-   * @param x Value to compute base 2 log for
-   * 
-   * @return constexpr size_t Base 2 log of x
-   */
-  static constexpr size_t log2(const size_t x)
-  {
-    size_t bit = 0;
-    while (bit != (8 * sizeof(size_t)))
-    {
-      if ((x >> bit) & 1) return bit;
-      ++bit;
-    }
-    return 0;
-  }
-
 public:
   using entity_type = Entity;
   using size_type = size_t;
-  using page_type = entity_type*;
-  using array_type = page_type*;
+  using array_type = entity_type*;
   using shared_count_type = uint16_t;
 
   static_assert(std::numeric_limits<entity_type>::is_integer && !std::numeric_limits<entity_type>::is_signed,
     "Entity type must be an unsigned integer");
 
   /**
-   * @brief Amount of entities that can fit in one page.
-   * 
-   * This is the SPARSE_ARRAY_PAGE_SIZE divided by the size of the entity type.
-   */
-  static constexpr size_type entites_per_page = SPARSE_ARRAY_PAGE_SIZE / sizeof(entity_type);
-
-  /**
-   * @brief Right bit shift amount to obtain an entities page.
-   * 
-   * This is the base 2 log of the amount of entities per page.
-   */
-  static constexpr size_type page_shift = log2(entites_per_page);
-
-  /**
-   * @brief Bit mask to obtain the offset of an entity in its page.
-   * 
-   * Obtained using the page shift.
-   */
-  static constexpr size_type offset_mask = ((1 << page_shift) - 1);
-
-  /**
    * @brief Construct a new sparse array object
    */
   sparse_array()
-    : _pages(8), _shared(0)
+    : _capacity(0), _shared(0)
   {
-    // This needs to be calloc because 0 pointers are used to determine if the page is allocated
-    _array = static_cast<array_type>(std::calloc(_pages, sizeof(page_type)));
+    _array = static_cast<array_type>(std::malloc(_capacity * sizeof(entity_type)));
   }
 
   /**
@@ -106,8 +56,6 @@ public:
    */
   ~sparse_array()
   {
-    for (size_type i = 0; i < _pages; i++)
-      if (_array[i]) free(_array[i]);
     free(_array);
   }
 
@@ -116,33 +64,23 @@ public:
   sparse_array& operator=(const sparse_array&) = delete;
 
   /**
-   * @brief Assures that the sparse array has a given page
+   * @brief Assures that the sparse array can contain the entity.
    * 
-   * First, this method checks if the page pointer even exists. It it doesn't
-   * it resizes the page pointer array. Then, this method checks if the requested
-   * page exists, if it doesn't it allocates the new page.
+   * If the sparse_array cannot contain the entity, this will trigger
+   * a resize.
    * 
    * @param page Page to assure
    */
-  void assure(const size_type page)
+  void assure(const entity_type entity)
   {
-    if (page >= _pages)
+    if (entity >= _capacity)
     {
-      // Make required amount the requested page + 1
-      // There does not seem to be any apperent performance gain by incrementing more than 1
-      const auto required = page + 1;
+      const auto linear = entity + (1024 / sizeof(entity_type)); // 1kb
+      const auto exponential = _capacity << 1; // Double capacity
 
-      _array = static_cast<array_type>(std::realloc(_array, required * sizeof(page_type)));
+      _capacity = entity >= exponential ? linear : exponential;
 
-      // We need to set the new memory to 0 here because 0 pointers are used to determine if the page is allocated
-      std::memset(_array + _pages, 0, (required - _pages) * sizeof(page_type));
-
-      _pages = required;
-    }
-
-    if (!_array[page])
-    {
-      _array[page] = static_cast<page_type>(std::malloc(SPARSE_ARRAY_PAGE_SIZE));
+      _array = static_cast<array_type>(std::realloc(_array, _capacity * sizeof(entity_type)));
     }
   }
 
@@ -152,54 +90,20 @@ public:
    * @param page Page index
    * @return page_type Array of indexes
    */
-  page_type operator[](const size_type page) const { return _array[page]; }
+  entity_type operator[](const entity_type entity) const { return _array[entity]; }
+
+  /*! @copydoc operator[] */
+  entity_type& operator[](const entity_type entity) { return _array[entity]; }
 
   /**
-   * @brief Returns the page for the page index.
+   * @brief Returns the capacity of the sparse_array.
    * 
-   * @param page Page index
-   * @return page_type Array of indexes
+   * If an entity identifier bigger than this amount is to be inserted into the
+   * sparse_array, a resize will be required.
+   * 
+   * @return size_type Capacity of the sparse_array
    */
-  page_type& operator[](const size_type page) { return _array[page]; }
-
-  /**
-   * @brief Returns the page index of an entity.
-   * 
-   * Simply a very cheap bitshift.
-   * 
-   * @param entity Entity to get the page index for
-   * @return size_type Page index for entity
-   */
-  size_type page(const entity_type entity) const { return entity >> page_shift; }
-
-  /**
-   * @brief Returns the page offset of an entity.
-   * 
-   * The offet is where the entity would be located in its page.
-   * 
-   * Simply a very cheap bitmask.
-   * 
-   * @param entity Entity to get the page offer for
-   * @return size_type Page offer for entity
-   */
-  size_type offset(const entity_type entity) const { return entity & offset_mask; }
-
-  /**
-   * @brief Returns the index mapping for an entity.
-   * 
-   * @param entity Entity to get the page offer for
-   * @return size_type Page offer for entity
-   */
-  size_type index(const entity_type entity) const { return _array[page(entity)][offset(entity)]; }
-
-  /**
-   * @brief Returns the amount of pages in the sparse_array.
-   * 
-   * This includes both allocated and unallocated pages.
-   * 
-   * @return size_type Amount of pages
-   */
-  size_type pages() const { return _pages; }
+  size_type capacity() const { return _capacity; }
 
   /**
    * @brief Signals that a storage is sharing this sparse_array
@@ -219,7 +123,7 @@ public:
 
 private:
   array_type _array;
-  size_type _pages;
+  size_type _capacity;
   shared_count_type _shared;
 };
 
@@ -330,16 +234,14 @@ public:
     static_assert(unique_types_v<IncludedComponents...>,
       "Included components are not unique");
 
-    const auto p = _sparse->page(entity);
-
     if (_size == _capacity) grow();
-    _sparse->assure(p);
+    _sparse->assure(entity);
 
     _dense[_size] = entity;
 
     ((access<IncludedComponents>()[_size] = components), ...);
 
-    (*_sparse)[p][_sparse->offset(entity)] = static_cast<entity_type>(_size++);
+    (*_sparse)[entity] = static_cast<entity_type>(_size++);
   }
 
   /**
@@ -357,13 +259,12 @@ public:
    */
   void erase(const entity_type entity)
   {
-    const auto back = _dense[--_size];
+    const auto back_entity = _dense[--_size];
+    const auto index = (*_sparse)[entity];
 
-    const auto index = _sparse->index(entity);
+    (*_sparse)[back_entity] = index;
 
-    (*_sparse)[_sparse->page(back)][_sparse->offset(back)] = static_cast<entity_type>(index);
-
-    _dense[index] = back;
+    _dense[index] = back_entity;
 
     ((access<Components>()[index] = std::move(access<Components>()[_size])), ...);
   }
@@ -378,17 +279,11 @@ public:
    */
   bool contains(const entity_type entity) const
   {
-    using page_type = entity_type*;
-
-    const auto pageIndex = _sparse->page(entity);
-
-    page_type page;
     size_type index;
 
     // We must access the dense array here because our sparse arrays may be shared, therefor we need
     // to make sure entity index is valid.
-    return pageIndex < _sparse->pages() && (page = (*_sparse)[pageIndex]) != 0
-           && (index = page[_sparse->offset(entity)]) < _size && _dense[index] == entity;
+    return (index = (*_sparse)[entity]) < _size && _dense[index] == entity;
   }
 
   /**
@@ -410,7 +305,7 @@ public:
     static_assert(contains_v<Component, list<Components...>>,
       "The component your trying to unpack does not belong to the archetype");
 
-    return access<Component>()[_sparse->index(entity)];
+    return access<Component>()[(*_sparse)[entity]];
   }
 
   /**
