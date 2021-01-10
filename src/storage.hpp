@@ -7,9 +7,9 @@
 #include <iterator>
 #include <limits>
 #include <memory>
+#include <stdexcept>
 #include <tuple>
 #include <utility>
-#include <stdexcept>
 
 #define SPARSE_ARRAY_PAGE_SIZE 4096 // This should not be changed unless you know what your doing
 
@@ -70,8 +70,25 @@ public:
   static_assert(std::numeric_limits<entity_type>::is_integer && !std::numeric_limits<entity_type>::is_signed,
     "Entity type must be an unsigned integer");
 
+  /**
+   * @brief Amount of entities that can fit in one page.
+   * 
+   * This is the SPARSE_ARRAY_PAGE_SIZE divided by the size of the entity type.
+   */
   static constexpr size_type entites_per_page = SPARSE_ARRAY_PAGE_SIZE / sizeof(entity_type);
+
+  /**
+   * @brief Right bit shift amount to obtain an entities page.
+   * 
+   * This is the base 2 log of the amount of entities per page.
+   */
   static constexpr size_type page_shift = log2(entites_per_page);
+
+  /**
+   * @brief Bit mask to obtain the offset of an entity in its page.
+   * 
+   * Obtained using the page shift.
+   */
   static constexpr size_type offset_mask = ((1 << page_shift) - 1);
 
   /**
@@ -227,7 +244,9 @@ private:
  * this allows us to always iterate on multiple components perfectly contiguously without any holes or branching checks.
  * There is very little extra cost for iterating over more than one component.
  * 
- * @warning Order is not guarented to be the same as when inserted
+ * @note Supports storing non-trivial types, however this is not recommended for performance.
+ * 
+ * @warning Order is never guaranted.
  * 
  * @tparam Entity unsigned integer entity identifier to store
  * @tparam Archetype list of components to store
@@ -246,7 +265,7 @@ private:
   using dense_type = entity_type*;
   using page_type = entity_type*;
   using sparse_type = sparse_array<Entity>*;
-  using storage_type = std::tuple<Components*...>;
+  using component_pool_type = std::tuple<Components*...>;
 
   static_assert(std::numeric_limits<entity_type>::is_integer && !std::numeric_limits<entity_type>::is_signed,
     "Entity type must be an unsigned integer");
@@ -262,9 +281,9 @@ public:
   {
     _sparse = new sparse_array<entity_type>();
 
-    // We allocate nothing but we just want the pointers to call realloc on
-    _dense = static_cast<dense_type>(std::malloc(0));
-    ((access<Components>() = static_cast<Components*>(std::malloc(0))), ...);
+    // Default capacity is zero so we allocate nothing, but we still want the pointers
+    _dense = static_cast<dense_type>(std::malloc(_capacity * sizeof(entity_type)));
+    (new_array<Components>(), ...);
   }
 
   /**
@@ -276,34 +295,12 @@ public:
     if (!_sparse->shared()) delete _sparse;
 
     free(_dense);
-    (free(access<Components>()), ...);
+    (delete_array<Components>(), ...);
   }
 
   storage(const storage&) = delete;
   storage(storage&&) = delete;
   storage& operator=(const storage&) = delete;
-
-  /**
-   * @brief Assures that the sparse set can store a entity for the specified page.
-   * 
-   * First, checks if the dense arrays are full, and resizes them if they are. Then,
-   * assures the sparse_array page.
-   * 
-   * @param page Page to assure for
-   */
-  void assure(const size_type page)
-  {
-    if (_size == _capacity)
-    {
-      // This is essentially _capacity * 1.5 + a small linear amount
-      _capacity = (_capacity * 3) / 2 + 8;
-
-      _dense = static_cast<dense_type>(std::realloc(_dense, _capacity * sizeof(entity_type)));
-      ((access<Components>() = static_cast<Components*>(std::realloc(access<Components>(), _capacity * sizeof(Components)))), ...);
-    }
-
-    _sparse->assure(page);
-  }
 
   /**
    * @brief Inserts a entity and all its components at once.
@@ -335,7 +332,8 @@ public:
 
     const auto p = _sparse->page(entity);
 
-    assure(p);
+    if (_size == _capacity) grow();
+    _sparse->assure(p);
 
     _dense[_size] = entity;
 
@@ -429,7 +427,7 @@ public:
       _capacity = _size;
 
       _dense = static_cast<dense_type>(std::realloc(_dense, _capacity * sizeof(entity_type)));
-      ((access<Components>() = static_cast<Components*>(std::realloc(access<Components>(), _capacity * sizeof(Components)))), ...);
+      (resize_array<Components>(), ...);
     }
   }
 
@@ -512,6 +510,52 @@ public:
 
 private:
   /**
+   * @brief Grows the sparse set allocated space.
+   * 
+   * Growth is exponential with a small linear amount.
+   */
+  void grow()
+  {
+    // This is essentially _capacity * 1.5 + 8
+    // There may be a better way to grow
+    _capacity = (_capacity * 3) / 2 + 8;
+
+    _dense = static_cast<dense_type>(std::realloc(_dense, _capacity * sizeof(entity_type)));
+    (resize_array<Components>(), ...);
+  }
+
+  template<typename Component>
+  void resize_array()
+  {
+    if constexpr (std::is_trivial_v<Component>)
+      access<Component>() = static_cast<Component*>(std::realloc(access<Component>(), _capacity * sizeof(Component)));
+    else
+    {
+      Component* new_array = new Component[_capacity];
+      std::copy(std::make_move_iterator(access<Component>()), std::make_move_iterator(access<Component>() + _size), new_array);
+      delete[] access<Component>();
+      access<Component>() = new_array;
+    }
+  }
+
+  template<typename Component>
+  void new_array()
+  {
+    if constexpr (std::is_trivial_v<Component>)
+      access<Component>() = static_cast<Component*>(std::malloc(_capacity * sizeof(Component)));
+    else
+      access<Component>() = new Component[_capacity];
+  }
+
+  template<typename Component>
+  void delete_array()
+  {
+    if constexpr (std::is_trivial_v<Component>) free(access<Component>());
+    else
+      delete[] access<Component>();
+  }
+
+  /**
    * @brief Accesses the component dense array for the specified component type.
    * 
    * @note Uses the tuple std::get method.
@@ -525,13 +569,13 @@ private:
     static_assert(contains_v<Component, list<Components...>>,
       "The component type your trying to access does not belong to the archetype");
 
-    return std::get<Component*>(_storage);
+    return std::get<Component*>(_pool);
   }
 
 private:
   dense_type _dense;
   sparse_type _sparse;
-  storage_type _storage;
+  component_pool_type _pool;
 
   size_type _size;
   size_type _capacity;

@@ -272,7 +272,6 @@ template<typename Component>
 struct verify_component
 {
   static_assert(std::is_same_v<Component, std::remove_cv_t<Component>>, "Component cannot be cv-qualified (const or volatile)");
-  static_assert(std::is_trivial_v<Component>, "Component must be trival (JUST DATA. no constructors, destructors...)");
 };
 
 template<typename... Components>
