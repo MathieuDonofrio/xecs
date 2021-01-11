@@ -668,6 +668,52 @@ void Iterate_TenArchetypesNoComponents()
   benchmark::do_not_optimize(registry.size());
 }
 
+void Iterate_STDVectorToCompare_WithSomeWork()
+{
+  std::vector<unsigned int> entities;
+  std::vector<Position> positions;
+  std::vector<Velocity> velocities;
+
+  const size_t iterations = 10000000;
+
+  for (size_t i = 0; i < iterations; i++)
+  {
+    entities.push_back(i);
+    double d = static_cast<double>(i);
+    positions.push_back(Position { d, d });
+    velocities.push_back(Velocity { d, d });
+  }
+
+  BEGIN_BENCHMARK(Iterate_STDVectorToCompare_WithSomeWork);
+
+  for (size_t i = 0; i < iterations; i++)
+  {
+    auto& position = positions[i];
+    auto& velocity = velocities[i];
+
+    position.x *= velocity.x * velocity.x;
+    position.y *= velocity.y * velocity.y;
+    velocity.x *= 0.98956;
+    velocity.y *= 0.98789;
+
+    benchmark::do_not_optimize(entities[i]);
+  }
+
+  END_BENCHMARK(iterations, 1);
+
+  double sum = 0;
+
+  for (size_t i = 0; i < iterations; i++)
+  {
+    auto& position = positions[i];
+    auto& velocity = velocities[i];
+
+    sum += position.x + position.y + velocity.x + velocity.y;
+  }
+
+  benchmark::do_not_optimize(sum);
+}
+
 void Iterate_WithSomeWork()
 {
   using entity_type = unsigned int;
@@ -693,7 +739,6 @@ void Iterate_WithSomeWork()
 
   registry.for_each<Position, Velocity>([](auto entity, auto& position, auto& velocity)
     {
-      // this is just random
       position.x *= velocity.x * velocity.x;
       position.y *= velocity.y * velocity.y;
       velocity.x *= 0.98956;
@@ -728,13 +773,14 @@ int main()
   Destroy_TenArchetypesTwoComponents();
   Destroy_TenArchetypesTwoComponents_KnownTypes();
 
-  //Iterate_STD_Vector_AsComparaison(); // uncomment if you want to compare to std vector
+  Iterate_STD_Vector_AsComparaison();
   Iterate_NoComponents();
   Iterate_OneComponent();
   Iterate_TwoComponents();
   Iterate_ThreeComponents();
   Iterate_TenComponents();
   Iterate_TenArchetypesNoComponents();
+  Iterate_STDVectorToCompare_WithSomeWork();
   Iterate_WithSomeWork();
 
   return 0;
