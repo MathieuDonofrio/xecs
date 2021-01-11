@@ -2,12 +2,12 @@
 
 #include "archetype.hpp"
 
+#include <cassert>
 #include <cstdlib>
 #include <cstring>
 #include <iterator>
 #include <limits>
 #include <memory>
-#include <stdexcept>
 #include <tuple>
 #include <utility>
 
@@ -196,7 +196,9 @@ public:
   ~storage()
   {
     // We only manage our sparse_array memory if its not shared
-    if (!_sparse->shared()) delete _sparse;
+    if (_sparse->shared()) _sparse->unshare();
+    else
+      delete _sparse;
 
     free(_dense);
     (free_array<Components>(), ...);
@@ -332,14 +334,14 @@ public:
    * Sharing sparse_arrays between storages that operate on entities distributed by the
    * same entity_manager is recommended for performance and memory usage.
    * 
-   * @throws std::exception If the storage is not empty.
+   * @warning Attemping to share a sparse array while already containing entities
+   * will no nothing.
    * 
    * @param sparse The sparse_array to share with this storage
    */
   void share(const sparse_type sparse)
   {
-    if (_size != 0)
-      throw new std::logic_error("You cannot share a sparse_array with a storage that is not empty");
+    if (_size != 0) return;
 
     if (_sparse->shared()) _sparse->unshare();
     else

@@ -4,13 +4,13 @@
 #include "entity_manager.hpp"
 #include "storage.hpp"
 
+#include <cassert>
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
 #include <iterator>
 #include <limits>
 #include <memory>
-#include <stdexcept>
 #include <string>
 #include <tuple>
 #include <utility>
@@ -106,8 +106,8 @@ public:
    * of archetypes. This complexity can be compleatly or partially reduced by specifying
    * all or some of the types of the entity's archetype. You should probably be doing this.
    * 
-   * @throws std::invalid_argument if the entity with the specified components does not 
-   * exist in the registry.
+   * @warning Attempting to destroy an entity that doesn't exist in the view results
+   * in undefined behaviour
    * 
    * @tparam Components Component types that you know this entity's archetype has
    * @param entity The entity to destroy
@@ -176,8 +176,8 @@ public:
    * all the components you know the entity's archetype contains, this can significantly improve
    * performance. However, obtaining the components from iteration is always the best way and has no cost.
    * 
-   * @throws std::invalid_argument if the entity with the specified component does not 
-   * exist in the registry.
+   * @warning Attempting to unpack an entity that doesn't contain the component results in
+   * undefined behaviour
    * 
    * @tparam Component The component type to unpack
    * @param entity Entity to unpack component for
@@ -335,7 +335,8 @@ public:
    * 
    * You should always prioritize getting your components from iteration.
    * 
-   * @warning You cannot unpack a component that is not included in the view.
+   * @warning Attempting to unpack an entity that is not in the view results in
+   * undefined behaviour
    * 
    * @note This method uses recusion to iterate over all the archetypes in the view.
    * 
@@ -353,16 +354,14 @@ public:
 
     using current = at_t<I, archetype_list_view_type>;
 
-    if constexpr (I == size_v<archetype_list_view_type>)
-      throw std::invalid_argument("Entity " + std::to_string(entity) + " does not exist in the view!");
-    else
-    {
-      auto& storage = _registry->template access<current>();
+    auto& storage = _registry->template access<current>();
 
-      if (storage.contains(entity)) return storage.template unpack<Component>(entity);
-      else
-        return unpack<Component, I + 1>(entity);
-    }
+    if constexpr (I + 1 == size_v<archetype_list_view_type>)
+      return storage.template unpack<Component>(entity);
+    else if (storage.contains(entity))
+      return storage.template unpack<Component>(entity);
+    else
+      return unpack<Component, I + 1>(entity);
   }
 
   /**
@@ -414,6 +413,9 @@ private:
    * because this method removes an entity without releasing the entity back into
    * the entity_manager.
    * 
+   * @warning Attempting to erase an entity that doesn't exist in the view results
+   * in undefined behaviour
+   * 
    * @note This method uses recusion to iterate over all the archetypes in the view.
    * 
    * @tparam I Archetype index used during recursion, always leave it at 0
@@ -424,16 +426,13 @@ private:
   {
     using current = at_t<I, archetype_list_view_type>;
 
-    if constexpr (I == size_v<archetype_list_view_type>)
-      throw std::invalid_argument("Entity " + std::to_string(entity) + " does not exist in the view!");
-    else
-    {
-      auto& storage = _registry->template access<current>();
+    auto& storage = _registry->template access<current>();
 
-      if (storage.contains(entity)) storage.erase(entity);
-      else
-        erase<I + 1>(entity);
-    }
+    if constexpr (I + 1 == size_v<archetype_list_view_type>) storage.erase(entity);
+    else if (storage.contains(entity))
+      storage.erase(entity);
+    else
+      erase<I + 1>(entity);
   }
 
 private:

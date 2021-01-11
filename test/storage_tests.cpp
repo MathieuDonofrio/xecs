@@ -492,7 +492,101 @@ TEST(StorageWithData, Insert_NonTrivalTriggerGrowth)
   ASSERT_FALSE(storage.contains(amount));
 }
 
-TEST(StorageSharedSparse, IsShared_TwoStoragesInsertSingle_ContainsBoth)
+TEST(StorageSharedSparseArray, Share_SingleStorage_Shared)
+{
+  using entity_type = unsigned int;
+  using sparse_type = sparse_array<entity_type>;
+  using storage_type = storage<entity_type, archetype<>>;
+
+  sparse_type shared;
+
+  storage_type storage;
+
+  ASSERT_FALSE(shared.shared());
+
+  storage.share(&shared);
+}
+
+TEST(StorageSharedSparseArray, Unshare_SingleStorage_NotShared)
+{
+  using entity_type = unsigned int;
+  using sparse_type = sparse_array<entity_type>;
+  using storage_type = storage<entity_type, archetype<>>;
+
+  sparse_type shared;
+
+  {
+    storage_type storage;
+
+    storage.share(&shared);
+
+    ASSERT_TRUE(shared.shared());
+
+    // unshares at end of scope
+  }
+
+  ASSERT_FALSE(shared.shared());
+}
+
+TEST(StorageSharedSparseArray, Share_TwoStorages_Shared)
+{
+  using entity_type = unsigned int;
+  using sparse_type = sparse_array<entity_type>;
+  using storage_type = storage<entity_type, archetype<>>;
+
+  sparse_type shared;
+
+  storage_type storage1;
+  storage_type storage2;
+
+  storage1.share(&shared);
+  storage2.share(&shared);
+
+  ASSERT_TRUE(shared.shared());
+  ASSERT_EQ(shared.shared(), 2);
+}
+
+TEST(StorageSharedSparseArray, Unshare_SingleStoragesOneUnshare_Shared)
+{
+  using entity_type = unsigned int;
+  using sparse_type = sparse_array<entity_type>;
+  using storage_type = storage<entity_type, archetype<>>;
+
+  sparse_type shared;
+
+  storage_type storage1;
+
+  storage1.share(&shared);
+
+  {
+    storage_type storage2;
+
+    storage2.share(&shared);
+
+    ASSERT_EQ(shared.shared(), 2);
+  }
+
+  ASSERT_EQ(shared.shared(), 1);
+}
+
+TEST(StorageSharedSparseArray, Unshare_SingleStoragesOneUnshare_Throws)
+{
+  using entity_type = unsigned int;
+  using sparse_type = sparse_array<entity_type>;
+  using storage_type = storage<entity_type, archetype<>>;
+
+  sparse_type shared;
+
+  storage_type storage;
+
+  storage.insert(99);
+
+  void(0);
+
+  ASSERT_FALSE(shared.shared());
+}
+
+TEST(StorageSharedSparseArray, Insert_TwoStoragesInsertSingle_ContainsBoth)
 {
   using entity_type = unsigned int;
   using sparse_type = sparse_array<entity_type>;
@@ -519,7 +613,7 @@ TEST(StorageSharedSparse, IsShared_TwoStoragesInsertSingle_ContainsBoth)
   ASSERT_TRUE(storage2.contains(20));
 }
 
-TEST(StorageSharedSparse, IsShared_TwoStoragesInsertSingle_UsingSharedMemory)
+TEST(StorageSharedSparseArray, Insert_TwoStoragesInsertSingle_UsingSharedMemory)
 {
   using entity_type = unsigned int;
   using sparse_type = sparse_array<entity_type>;

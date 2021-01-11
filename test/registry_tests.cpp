@@ -243,22 +243,6 @@ TEST(Registry, Destroy_TwoArchetypes_SizeDecrease)
   auto entity1 = registry.create(10);
   auto entity2 = registry.create(0.5f);
 
-  try
-  {
-    registry.destroy<float>(entity1);
-  }
-  catch (const std::exception&)
-  {};
-
-  ASSERT_EQ(registry.size(), 2);
-
-  try
-  {
-    registry.destroy<int>(entity2);
-  }
-  catch (const std::exception&)
-  {};
-
   ASSERT_EQ(registry.size(), 2);
 
   registry.destroy<int>(entity1);
@@ -484,38 +468,6 @@ TEST(Registry, Unpack_SetWithMultipleArchetypes_SameValues)
   ASSERT_EQ(registry.unpack<float>(entity2), 0.5f);
 }
 
-TEST(Registry, Unpack_EntityThatDoesntExist_Throw)
-{
-  using entity_type = unsigned int;
-  using registered_archetypes = archetype_list_builder::
-    add<archetype<int>>::
-      add<archetype<float>>::
-        build;
-
-  registry<entity_type, registered_archetypes> registry;
-
-  auto entity1 = registry.create(10);
-  auto entity2 = registry.create(0.5f);
-
-  try
-  {
-    registry.unpack<float>(entity1) = 15;
-  }
-  catch (const std::exception&)
-  {};
-
-  ASSERT_EQ(registry.unpack<int>(entity1), 10);
-
-  try
-  {
-    registry.unpack<int>(entity2) = 50;
-  }
-  catch (const std::exception&)
-  {};
-
-  ASSERT_EQ(registry.unpack<float>(entity2), 0.5f);
-}
-
 TEST(Registry, ForEach_Single_SameValues)
 {
   using entity_type = unsigned int;
@@ -613,4 +565,3 @@ TEST(Registry, ForEach_MultipleTwoArchetypes_CorrectIterations)
 
   ASSERT_EQ(amount / 2, floatview);
 }
-
