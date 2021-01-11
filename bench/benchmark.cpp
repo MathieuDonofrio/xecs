@@ -303,15 +303,15 @@ void Destroy_TenArchetypesTwoComponents()
   using entity_type = unsigned int;
   using registered_archetypes = archetype_list_builder::
     add<archetype<Position, Component<0>>>::
-      add<archetype<Velocity, Component<1>>>::
+      add<archetype<Position, Component<1>>>::
         add<archetype<Position, Component<2>>>::
-          add<archetype<Velocity, Component<3>>>::
+          add<archetype<Position, Component<3>>>::
             add<archetype<Position, Component<4>>>::
-              add<archetype<Velocity, Component<5>>>::
+              add<archetype<Position, Component<5>>>::
                 add<archetype<Position, Component<6>>>::
-                  add<archetype<Velocity, Component<7>>>::
+                  add<archetype<Position, Component<7>>>::
                     add<archetype<Position, Component<8>>>::
-                      add<archetype<Velocity, Component<9>>>::build;
+                      add<archetype<Position, Component<9>>>::build;
 
   registry<entity_type, registered_archetypes> registry;
 
@@ -324,15 +324,15 @@ void Destroy_TenArchetypesTwoComponents()
     switch (i % 10)
     {
     case 0: entities.push_back(registry.create(Position {}, Component<0> {})); break;
-    case 1: entities.push_back(registry.create(Velocity {}, Component<1> {})); break;
+    case 1: entities.push_back(registry.create(Position {}, Component<1> {})); break;
     case 2: entities.push_back(registry.create(Position {}, Component<2> {})); break;
-    case 3: entities.push_back(registry.create(Velocity {}, Component<3> {})); break;
+    case 3: entities.push_back(registry.create(Position {}, Component<3> {})); break;
     case 4: entities.push_back(registry.create(Position {}, Component<4> {})); break;
-    case 5: entities.push_back(registry.create(Velocity {}, Component<5> {})); break;
+    case 5: entities.push_back(registry.create(Position {}, Component<5> {})); break;
     case 6: entities.push_back(registry.create(Position {}, Component<6> {})); break;
-    case 7: entities.push_back(registry.create(Velocity {}, Component<7> {})); break;
+    case 7: entities.push_back(registry.create(Position {}, Component<7> {})); break;
     case 8: entities.push_back(registry.create(Position {}, Component<8> {})); break;
-    case 9: entities.push_back(registry.create(Velocity {}, Component<9> {})); break;
+    case 9: entities.push_back(registry.create(Position {}, Component<9> {})); break;
     }
   }
 
@@ -362,15 +362,15 @@ void Destroy_TenArchetypesTwoComponents_KnownTypes()
   using entity_type = unsigned int;
   using registered_archetypes = archetype_list_builder::
     add<archetype<Position, Component<0>>>::
-      add<archetype<Velocity, Component<1>>>::
+      add<archetype<Position, Component<1>>>::
         add<archetype<Position, Component<2>>>::
-          add<archetype<Velocity, Component<3>>>::
+          add<archetype<Position, Component<3>>>::
             add<archetype<Position, Component<4>>>::
-              add<archetype<Velocity, Component<5>>>::
+              add<archetype<Position, Component<5>>>::
                 add<archetype<Position, Component<6>>>::
-                  add<archetype<Velocity, Component<7>>>::
+                  add<archetype<Position, Component<7>>>::
                     add<archetype<Position, Component<8>>>::
-                      add<archetype<Velocity, Component<9>>>::build;
+                      add<archetype<Position, Component<9>>>::build;
 
   registry<entity_type, registered_archetypes> registry;
 
@@ -383,15 +383,15 @@ void Destroy_TenArchetypesTwoComponents_KnownTypes()
     switch (i % 10)
     {
     case 0: entities.push_back(registry.create(Position {}, Component<0> {})); break;
-    case 1: entities.push_back(registry.create(Velocity {}, Component<1> {})); break;
+    case 1: entities.push_back(registry.create(Position {}, Component<1> {})); break;
     case 2: entities.push_back(registry.create(Position {}, Component<2> {})); break;
-    case 3: entities.push_back(registry.create(Velocity {}, Component<3> {})); break;
+    case 3: entities.push_back(registry.create(Position {}, Component<3> {})); break;
     case 4: entities.push_back(registry.create(Position {}, Component<4> {})); break;
-    case 5: entities.push_back(registry.create(Velocity {}, Component<5> {})); break;
+    case 5: entities.push_back(registry.create(Position {}, Component<5> {})); break;
     case 6: entities.push_back(registry.create(Position {}, Component<6> {})); break;
-    case 7: entities.push_back(registry.create(Velocity {}, Component<7> {})); break;
+    case 7: entities.push_back(registry.create(Position {}, Component<7> {})); break;
     case 8: entities.push_back(registry.create(Position {}, Component<8> {})); break;
-    case 9: entities.push_back(registry.create(Velocity {}, Component<9> {})); break;
+    case 9: entities.push_back(registry.create(Position {}, Component<9> {})); break;
     }
   }
 
@@ -400,15 +400,15 @@ void Destroy_TenArchetypesTwoComponents_KnownTypes()
   for (size_t i = 0; i < entities.size(); i += 10)
   {
     registry.destroy<Position, Component<0>>(entities[i]);
-    registry.destroy<Velocity, Component<1>>(entities[i + 1]);
+    registry.destroy<Position, Component<1>>(entities[i + 1]);
     registry.destroy<Position, Component<2>>(entities[i + 2]);
-    registry.destroy<Velocity, Component<3>>(entities[i + 3]);
+    registry.destroy<Position, Component<3>>(entities[i + 3]);
     registry.destroy<Position, Component<4>>(entities[i + 4]);
-    registry.destroy<Velocity, Component<5>>(entities[i + 5]);
+    registry.destroy<Position, Component<5>>(entities[i + 5]);
     registry.destroy<Position, Component<6>>(entities[i + 6]);
-    registry.destroy<Velocity, Component<7>>(entities[i + 7]);
+    registry.destroy<Position, Component<7>>(entities[i + 7]);
     registry.destroy<Position, Component<8>>(entities[i + 8]);
-    registry.destroy<Velocity, Component<9>>(entities[i + 9]);
+    registry.destroy<Position, Component<9>>(entities[i + 9]);
   }
 
   END_BENCHMARK(iterations / 10, 10);
