@@ -2,6 +2,7 @@
 
 #include <registry.hpp>
 #include <vector>
+#include <string>
 
 using namespace ecs;
 
@@ -23,6 +24,11 @@ struct Color
   uint32_t g;
   uint32_t b;
   uint32_t a;
+};
+
+struct NonTrivial
+{
+  std::string s;
 };
 
 template<size_t ID>
@@ -72,6 +78,28 @@ void Create_OneComponent()
   for (size_t i = 0; i < iterations; i++)
   {
     benchmark::do_not_optimize(registry.create(Position {}));
+  }
+
+  END_BENCHMARK(iterations, 1);
+
+  benchmark::do_not_optimize(registry.size());
+}
+
+void Create_OneComponentNonTrivial()
+{
+  using entity_type = unsigned int;
+  using registered_archetypes = archetype_list_builder::add<
+    archetype<NonTrivial>>::build;
+
+  registry<entity_type, registered_archetypes> registry;
+
+  const size_t iterations = 10000000;
+
+  BEGIN_BENCHMARK(Create_OneComponentNonTrivial);
+
+  for (size_t i = 0; i < iterations; i++)
+  {
+    benchmark::do_not_optimize(registry.create(NonTrivial()));
   }
 
   END_BENCHMARK(iterations, 1);
@@ -761,6 +789,7 @@ int main()
 {
   Create_NoComponents();
   Create_OneComponent();
+  Create_OneComponentNonTrivial();
   Create_TwoComponents();
   Create_ThreeComponents();
 
