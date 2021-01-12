@@ -1,4 +1,4 @@
-![Banner](https://user-images.githubusercontent.com/49959920/104272526-458c7980-546b-11eb-8dc4-684f27406a2e.png)
+![Banner](https://user-images.githubusercontent.com/49959920/104272813-f2ff8d00-546b-11eb-8128-90c5ef943f14.png)
 
 [![Build Status](https://github.com/MathieuDonofrio/xecs/workflows/build/badge.svg)](https://github.com/MathieuDonofrio/xecs/actions)
 [![Code Coverage](https://codecov.io/gh/MathieuDonofrio/xecs/branch/master/graph/badge.svg?token=1KD29OJ244)](https://codecov.io/gh/MathieuDonofrio/xecs)
