@@ -3,7 +3,7 @@
 [![Build Status](https://github.com/MathieuDonofrio/xecs/workflows/build/badge.svg)](https://github.com/MathieuDonofrio/xecs/actions)
 [![Code Coverage](https://codecov.io/gh/MathieuDonofrio/xecs/branch/master/graph/badge.svg?token=1KD29OJ244)](https://codecov.io/gh/MathieuDonofrio/xecs)
 
-Xecs is a small but powerfull, header-only entity-component system that uses **compile-time archetypes** written in **modern c++**. 
+`XECS` is a small but powerfull, header-only entity-component system that uses **compile-time archetypes** written in **modern c++**. 
 
 # Table of Contents
 
@@ -30,7 +30,7 @@ For further details:
 
 ## Performance
 
-If you haven't noticed, performance is a huge part of this project. I have fairly benchmarked against some of the most known and powerfull open-source ECS libraries and I can say with pretty good confidence that this library is very efficient. Not just in terms of speed but also in memory. 
+Performance is a huge part of this project. I have fairly benchmarked against some of the most known and powerfull open-source ECS libraries and I can say with pretty good confidence that this library is very efficient. Not just in terms of speed but also in memory. 
 
 This project includes some benchmarks that you can try for yourself and see if your satisfied with the results.
 
@@ -142,8 +142,8 @@ You can call the unpack method to obtain a reference of the component your tryin
 ```cpp
 entity entity_to_unpack = registry.create(Position { }, Velocity { });
 
-registry.unpack<Position>(entity_to_unpack) = Position { 1, 1};
-registry.unpack<Velocity>(entity_to_unpack) = Velocity { 2, 2};
+registry.unpack<Position>(entity_to_unpack) = Position { 1, 1 };
+registry.unpack<Velocity>(entity_to_unpack) = Velocity { 2, 2 };
 ```
 
 ### Iterating
@@ -175,6 +175,77 @@ registry.for_each<Position, Velocity>([](const auto entity, const auto& position
 });
 ```
 
+Using a view
+
+```cpp
+auto view = registry.view<Position, Velocit>();
+
+view.for_each([](const auto entity, const auto& position, const auto& velocity)
+{
+  /* ... */
+});
+```
+
 # Build Instructions
+
+## Requirements
+
+To be able to use `XECS` you must have a standard compliant compiler that supports at least C++17.
+
+The following platforms and compilers are continously tested to work:
+
+* Windows
+  * msvc
+* Windows-2016
+  * default
+* Ubuntu
+  * gcc
+  * clang
+* MacOS
+  * default
+
+## Library
+
+`XECS` is a header-only library. All you need to do is include the headers.
+
+```cpp
+#include <xecs.hpp>
+```
+
+## Tests
+
+`googletest` is used as our testing framework. CMake will sets all this up for your.
+
+All you need to do is to set the cmake option `XECS_BUILD_TESTING" to `ON`.
+
+Steps on windows using msvc:
+* `cd build`
+* `cmake -DXECS_BUILD_TESTING=ON ..`
+* Open the generated solution
+* Build and run the `test` project
+
+Steps on linux:
+* `$ cd build`
+* `$ cmake -DXECS_BUILD_TESTING=ON ..`
+* `$ make`
+* `$ ./test/tests`
+
+## Benchmark
+
+No dependancies are used for benchmarking.
+
+All you need to do is to set the cmake option `XECS_BUILD_BENCHMAKING" to `ON`.
+
+Using visual studio:
+* `cd build`
+* `cmake -DXECS_BUILD_TESTING=ON ..`
+* Open the generated solution
+* Build and run the `test` project
+
+Using make:
+* `$ cd build`
+* `$ cmake -XECS_BUILD_BENCHMAKING=ON ..`
+* `$ make`
+* `$ ./bench/benchmark`
 
 
