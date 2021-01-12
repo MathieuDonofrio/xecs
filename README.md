@@ -1,8 +1,8 @@
 # ecs
 [![Build Status](https://github.com/MathieuDonofrio/ecs/workflows/build/badge.svg)](https://github.com/MathieuDonofrio/ecs/actions)
-[![Code Coverage](https://codecov.io/gh/MathieuDonofrio/ecs/branch/master/graph/badge.svg?token=1KD29OJ244)](https://codecov.io/gh/MathieuDonofrio/ecs)
+[![Code Coverage](https://codecov.io/gh/MathieuDonofrio/xecs/branch/master/graph/badge.svg?token=1KD29OJ244)](https://codecov.io/gh/MathieuDonofrio/xecs)
 
-Small, powerfull, header-only pure entity-component system that uses **compile-time archetypes** written in **modern c++**. 
+Xecs is a small but powerfull, header-only entity-component system that uses **compile-time archetypes** written in **modern c++**. 
 
 # Table of Contents
 
