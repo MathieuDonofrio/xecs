@@ -214,27 +214,9 @@ The following platforms and compilers are continously tested to work:
 
 ## Tests
 
-`googletest` is used as our testing framework. CMake will sets all this up for your.
+`googletest` is used as our testing framework. CMake will sets all this up for you.
 
-All you need to do is to set the cmake option `XECS_BUILD_TESTING" to `ON`.
-
-Steps on windows using msvc:
-* `cd build`
-* `cmake -DXECS_BUILD_TESTING=ON ..`
-* Open the generated solution
-* Build and run the `test` project
-
-Steps on linux:
-* `$ cd build`
-* `$ cmake -DXECS_BUILD_TESTING=ON ..`
-* `$ make`
-* `$ ./test/tests`
-
-## Benchmark
-
-No dependancies are used for benchmarking.
-
-All you need to do is to set the cmake option `XECS_BUILD_BENCHMAKING" to `ON`.
+The cmake option `XECS_BUILD_TESTING` is used to determine if testing will be built.
 
 Using visual studio:
 * `cd build`
@@ -244,8 +226,29 @@ Using visual studio:
 
 Using make:
 * `$ cd build`
-* `$ cmake -XECS_BUILD_BENCHMAKING=ON ..`
+* `$ cmake -DXECS_BUILD_TESTING=ON ..`
 * `$ make`
-* `$ ./bench/benchmark`
+* `$ ./test/tests`
+
+## Benchmarks
+
+No dependancies are used for benchmarking.
+
+You must make sure your are in release mode, or else compiler optimizations wont be enabled and benchmarking will be quite pointless...
+
+The cmake option `XECS_BUILD_BENCHMAKING` is used to determine if benchmarking will be built.
+
+Using visual studio:
+* `cd build`
+* `cmake -XECS_BUILD_BENCHMAKING=ON ..`
+* Open the generated solution
+* Set your build to release mode
+* Build and run the `benchmarks` project
+
+Using make:
+* `$ cd build`
+* `$ cmake -DCMAKE_BUILD_TYPE=Release -XECS_BUILD_BENCHMAKING=ON ..`
+* `$ make`
+* `$ ./bench/benchmarks`
 
 
