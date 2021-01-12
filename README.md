@@ -8,10 +8,11 @@ Xecs is a small but powerfull, header-only entity-component system that uses **c
 # Table of Contents
 
 * [Introduction](#introduction)
-    * [Motivation](#implementation)
-    * [Performance](#performance)
-    * [Future](#future)
-* [Code Example](#code-example)
+  * [Motivation](#implementation)
+  * [Performance](#performance)
+  * [Future](#future)
+* [Code Examples](#code-examples)
+  * [Tutorial](#tutorial)
 * [Build Instructions](#build-instructions)
 
 # Introduction
@@ -56,6 +57,124 @@ I have several things I would like to implement in the future, here are a few:
 
 I have built the libary with these already in mind, and I have quite a few good ideas but i'm still taking my time to make sure I can implement it in the best way possible in future versions.
 
-# Code Example
+# Code Examples
+
+## Tutorial
+
+### Include
+
+```cpp
+#include <xecs.hpp>
+```
+
+### Component creation
+
+Components are simply just structs.
+
+```cpp
+struct Position
+{
+  float x;
+  float y;
+};
+
+struct Velocity
+{
+  float x;
+  float y;
+};
+
+```
+
+### Compile-time configuration
+
+You must first choose a unsigned int type to be your entity type.
+
+```cpp
+using entity = uint32_t;
+```
+
+You must declare all your archetypes, you can use the builder utility.
+
+```cpp
+using archetypes = xecs::archetype_list_builder::
+  add<xecs::archetype<Position>>::
+  add<xecs::archetype<Position, Velocity>>::
+  build;
+```
+
+### Registry creation
+
+A registry is where your entities and components are stored and managed.
+
+```cpp
+xecs::registry<entity, archetypes> registry;
+```
+
+### Entity creation and initialization
+
+Call the create method with all the components that the entity will have (The archetype of the component).
+
+Excample for archetype [Position]:
+```cpp
+registry.create(Position { 10, 20 });
+```
+
+Example for archetype [Position, Velocity]:
+```cpp
+registry.create(Position { 5, 99 }, Velocity { 3, 5 });
+```
+
+### Entity destruction
+
+Call the destroy method and pass the entity.
+
+```cpp
+entity entity_to_destroy = registry.create(Position { });
+
+registry.destroy(entity_to_destroy);
+```
+
+### Entity component unpacking
+
+You can call the unpack method to obtain a reference of the component your trying to access.
+
+```cpp
+entity entity_to_unpack = registry.create(Position { }, Velocity { });
+
+registry.unpack<Position>(entity_to_unpack) = Position { 1, 1};
+registry.unpack<Velocity>(entity_to_unpack) = Velocity { 2, 2};
+```
+
+### Iterating
+
+Iterate over all entity identifiers
+
+```cpp
+registry.for_each([](const auto entity)
+{
+  /* ... */
+});
+```
+
+Iterate over all entities with a specified component
+
+```cpp
+registry.for_each<Position>([](const auto entity, const auto& position)
+{
+  /* ... */
+});
+```
+
+Iterate over all entities with multiple specified component
+
+```cpp
+registry.for_each<Position, Velocity>([](const auto entity, const auto& position, const auto& velocity)
+{
+  /* ... */
+});
+```
 
 # Build Instructions
+
+
