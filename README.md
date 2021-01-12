@@ -1,4 +1,5 @@
-# ecs
+![Banner](https://user-images.githubusercontent.com/49959920/104270192-e9732680-5465-11eb-8509-64c4982c027d.png)
+
 [![Build Status](https://github.com/MathieuDonofrio/xecs/workflows/build/badge.svg)](https://github.com/MathieuDonofrio/xecs/actions)
 [![Code Coverage](https://codecov.io/gh/MathieuDonofrio/xecs/branch/master/graph/badge.svg?token=1KD29OJ244)](https://codecov.io/gh/MathieuDonofrio/xecs)
 
