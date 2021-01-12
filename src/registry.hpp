@@ -15,7 +15,7 @@
 #include <tuple>
 #include <utility>
 
-namespace ecs
+namespace xecs
 {
 /**
  * @brief Entity-component system core contaner.
@@ -438,4 +438,4 @@ private:
 private:
   registry_type* _registry;
 };
-} // namespace ecs
+} // namespace xecs

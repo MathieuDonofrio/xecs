@@ -10,7 +10,7 @@
 static_assert((ENTITY_MANAGER_STACK_SIZE & (ENTITY_MANAGER_STACK_SIZE - 1)) == 0,
   "ENTITY_MANAGER_STACK_SIZE must be a power of two");
 
-namespace ecs
+namespace xecs
 {
 /**
  * @brief Manager responsible for distributing entities.
@@ -225,4 +225,4 @@ private:
   heap_buffer_type _heap_buffer;
   stack_buffer_type _stack_buffer;
 };
-} // namespace ecs
+} // namespace xecs

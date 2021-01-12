@@ -3,7 +3,7 @@
 #include <storage.hpp>
 #include <string>
 
-using namespace ecs;
+using namespace xecs;
 
 TEST(Storage, Empty_AfterInitialization_True)
 {

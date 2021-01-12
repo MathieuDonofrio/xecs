@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include <registry.hpp>
 
-using namespace ecs;
+using namespace xecs;
 
 TEST(Registry, Storages_OneArchetype_OneStorages)
 {

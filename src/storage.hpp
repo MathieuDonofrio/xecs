@@ -11,7 +11,7 @@
 #include <tuple>
 #include <utility>
 
-namespace ecs
+namespace xecs
 {
 /**
  * @brief Array that sparsely stores indexes towards another array.
@@ -577,4 +577,4 @@ private:
   storage* const _ptr;
   size_type _pos;
 };
-} // namespace ecs
+} // namespace xecs

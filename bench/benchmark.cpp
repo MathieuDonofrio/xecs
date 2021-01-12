@@ -4,7 +4,7 @@
 #include <vector>
 #include <string>
 
-using namespace ecs;
+using namespace xecs;
 
 struct Position
 {

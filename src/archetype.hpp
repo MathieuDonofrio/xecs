@@ -5,7 +5,7 @@
 #include <tuple>
 #include <type_traits>
 
-namespace ecs
+namespace xecs
 {
 /**
  * @brief List of types.
@@ -334,4 +334,4 @@ namespace internal
  */
 struct archetype_list_builder : internal::archetype_list_builder<>
 {};
-} // namespace ecs
+} // namespace xecs

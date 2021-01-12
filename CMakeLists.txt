@@ -2,17 +2,17 @@
 # ECS
 #
 
-cmake_minimum_required(VERSION 3.19)
+cmake_minimum_required(VERSION 3.14)
 
 #
 # Project Configuration
 #
 
 project(
-  ECS
-  VERSION 0.1.0
-  DESCRIPTION "Simple fast entity-component system (ECS)"
-  HOMEPAGE_URL "https://github.com/MathieuDonofrio/ecs"
+  XECS
+  VERSION 1.0.0
+  DESCRIPTION "Fast entity-component-system (ECS) with compile-time archetypes"
+  HOMEPAGE_URL "https://github.com/MathieuDonofrio/xecs"
   LANGUAGES CXX
 )
 
@@ -38,17 +38,17 @@ endif()
 # Target
 #
 
-add_library(ECS INTERFACE)
-target_include_directories(ECS INTERFACE ${ECS_SOURCE_DIR}/src)
-target_compile_features(ECS INTERFACE cxx_std_17)
+add_library(XECS INTERFACE)
+target_include_directories(XECS INTERFACE ${XECS_SOURCE_DIR}/src)
+target_compile_features(XECS INTERFACE cxx_std_17)
 
 #
 # Tests
 #
 
-option(ECS_BUILD_TESTING "Enable building with tests" OFF)
+option(XECS_BUILD_TESTING "Enable building with tests" OFF)
 
-if(ECS_BUILD_TESTING)
+if(XECS_BUILD_TESTING)
   include(CTest)
   enable_testing()
   add_subdirectory(test)
@@ -58,8 +58,8 @@ endif()
 # Benchmarks
 #
 
-option(ECS_BUILD_BENCHMARKING "Enable building with benchmarks" OFF)
+option(XECS_BUILD_BENCHMARKING "Enable building with benchmarks" OFF)
 
-if(ECS_BUILD_BENCHMARKING)
+if(XECS_BUILD_BENCHMARKING)
   add_subdirectory(bench)
 endif()

@@ -1,6 +1,6 @@
 #include <archetype.hpp>
 
-namespace ecs
+namespace xecs
 {
 static_assert(size_v<list<>> == 0, "");
 static_assert(size_v<list<float>> == 1, "");
@@ -103,4 +103,4 @@ static_assert(std::is_same_v<int, at_t<1, list<float, int>>>, "");
 static_assert(std::is_same_v<double, at_t<0, list<double, float, int>>>, "");
 static_assert(std::is_same_v<float, at_t<1, list<double, float, int>>>, "");
 static_assert(std::is_same_v<int, at_t<2, list<double, float, int>>>, "");
-} // namespace ecs
+} // namespace xecs

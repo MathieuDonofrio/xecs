@@ -2,7 +2,7 @@
 #include <gtest/gtest.h>
 #include <vector>
 
-using namespace ecs;
+using namespace xecs;
 
 TEST(EntityManager, Peek_AfterInitialization_Zero)
 {
@@ -144,7 +144,7 @@ TEST(EntityManager, ReleaseAll_Multiple_Empty)
 
   entity_manager_type manager;
 
-  for(size_t i = 0; i < 10000; i++)
+  for (size_t i = 0; i < 10000; i++)
   {
     manager.generate();
   }
@@ -168,12 +168,12 @@ TEST(EntityManager, ReleaseAll_MultipleReused_Empty)
 
   size_t amount = 10000;
 
-  for(size_t i = 0; i < amount; i++)
+  for (size_t i = 0; i < amount; i++)
   {
     entities.push_back(manager.generate());
   }
 
-  for(auto it = entities.begin(); it != entities.end(); ++it)
+  for (auto it = entities.begin(); it != entities.end(); ++it)
   {
     manager.release(*it);
   }
