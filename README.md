@@ -1,5 +1,5 @@
 # ecs
-[![Build Status](https://github.com/MathieuDonofrio/ecs/workflows/build/badge.svg)](https://github.com/MathieuDonofrio/ecs/actions)
+[![Build Status](https://github.com/MathieuDonofrio/xecs/workflows/build/badge.svg)](https://github.com/MathieuDonofrio/xecs/actions)
 [![Code Coverage](https://codecov.io/gh/MathieuDonofrio/xecs/branch/master/graph/badge.svg?token=1KD29OJ244)](https://codecov.io/gh/MathieuDonofrio/xecs)
 
 Xecs is a small but powerfull, header-only entity-component system that uses **compile-time archetypes** written in **modern c++**. 
@@ -20,11 +20,11 @@ Entity–component–system (ECS) is an architectural pattern used to build high
 * **Data-oriented design over object-oriented design** to take advantage of the cache in todays processors making code more efficient.
 * **Composition over inheritance** for better modularity and higher flexibility.
 
-This particular library takes a more modern, and increasingly popular approach know as **archetypes**. Archetypes as essentially a grouping of components that allow us to optimize our storage layout. 
+This particular library takes a more modern, and increasingly popular approach know as **archetypes**. Archetypes are essentially a grouping of components that allow us to optimize our storage layout. 
 
 For further details:
 
-* ECS on Wikipedia: [ECS Wikipedia](https://en.wikipedia.org/wiki/Entity_component_system)
+* ECS: [ECS Wikipedia](https://en.wikipedia.org/wiki/Entity_component_system)
 
 ## Performance
 
@@ -32,9 +32,9 @@ If you haven't noticed, performance is a huge part of this project. I have fairl
 
 This project includes some benchmarks that you can try for yourself and see if your satisfied with the results.
 
-Generally, creating and deleting entities as well as setting the component data is the same speed or faster than any other library. Iterating over a single component is also the same speed or faster. However, iterating over multiple components is at least 2 times faster (very conservative) than any other library.
+This library performs very well generally, but where it shines the most is when iterating over multiple components with complex relations. This makes this implementation a lot more scalable in terms speed. Iterating over multiple components is at least 2 times faster (very conservative) than any other ECS library.
 
-In terms of memory, for any ECS library that uses sparse sets, clever memory sharing optimizations make this library use much less memory. For an entity with any given archetype, the memory cost of storing it is: 2 * (size of entity identifier) + (size of all components in the archetype).
+More memory for more speed is a typical tradeoff in most ECS implementations, however clever compile-time optimizations make this implementation have very little memory overhead. For an entity with any given archetype, the memory cost of storing it is: 2 * (size of entity identifier) + (size of all components in the archetype).
 
 ## Motivation
 
@@ -42,7 +42,7 @@ I have many motivations for writing and maintaining this library, notably for th
 
 My goal for this project is to provide a simple but powerfull implementation. As of writing this, the project is less than 2000 lines of code with the documentation, all contained in just a handful of header files. The library must be simple, but not at the cost of performance.
 
-Altho there is still work to be done, I still believe that I have accomplished my goals quite well. I am proud of my implementation thus far, so I have open-sourced it and hope that it will help others make high-performance applications or learn about ECS.
+Altho there is still work to be done, I believe that I have accomplished my goals reasonably quite well. I am proud of my implementation thus far, so I have open-sourced it and hope that it will help others make high-performance applications or learn about ECS.
 
 ## Future
 
@@ -53,7 +53,7 @@ I have several things I would like to implement in the future, here are a few:
 * Shared Components
 * Static entites
 
-I have built the libary with these already in mind, and I have quite a few good ideas but i'm still testing stuff out and making sure I can implement it in the best way possible.
+I have built the libary with these already in mind, and I have quite a few good ideas but i'm still taking my time to make sure I can implement it in the best way possible in future versions.
 
 # Code Example
 
