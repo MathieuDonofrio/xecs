@@ -2,6 +2,7 @@
 
 [![Build Status](https://github.com/MathieuDonofrio/xecs/workflows/build/badge.svg)](https://github.com/MathieuDonofrio/xecs/actions)
 [![Code Coverage](https://codecov.io/gh/MathieuDonofrio/xecs/branch/master/graph/badge.svg?token=1KD29OJ244)](https://codecov.io/gh/MathieuDonofrio/xecs)
+[![Try online](https://img.shields.io/badge/try-online-brightgreen)](https://godbolt.org/z/fPnr5x)
 
 `XECS` is a small but powerfull, header-only entity-component system that uses **compile-time archetypes** written in **modern c++**. 
 
