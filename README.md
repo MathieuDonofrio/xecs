@@ -208,9 +208,7 @@ The following platforms and compilers are continously tested to work:
 
 `XECS` is a header-only library. All you need to do is include the headers.
 
-```cpp
-#include <xecs.hpp>
-```
+The simplest way would be to simply add the single header file `single/xecs.hpp` to your project.
 
 ## Tests
 
