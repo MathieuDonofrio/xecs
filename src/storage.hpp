@@ -1,4 +1,5 @@
-#pragma once
+#ifndef _XECS_STORAGE_HPP_
+#define _XECS_STORAGE_HPP_
 
 #include "archetype.hpp"
 
@@ -578,3 +579,5 @@ private:
   size_type _pos;
 };
 } // namespace xecs
+
+#endif

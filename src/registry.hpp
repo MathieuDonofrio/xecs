@@ -1,4 +1,5 @@
-#pragma once
+#ifndef _XECS_REGISTRY_HPP_
+#define _XECS_REGISTRY_HPP_
 
 #include "archetype.hpp"
 #include "entity_manager.hpp"
@@ -439,3 +440,5 @@ private:
   registry_type* _registry;
 };
 } // namespace xecs
+
+#endif

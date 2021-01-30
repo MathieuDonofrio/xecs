@@ -1,4 +1,5 @@
-#pragma once
+#ifndef _XECS_ENTITY_MANAGER_HPP_
+#define _XECS_ENTITY_MANAGER_HPP_
 
 #include <cstdlib>
 #include <cstring>
@@ -226,3 +227,5 @@ private:
   stack_buffer_type _stack_buffer;
 };
 } // namespace xecs
+
+#endif

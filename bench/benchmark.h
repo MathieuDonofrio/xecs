@@ -1,3 +1,6 @@
+#ifndef _BENCHMARK_HPP_
+#define _BENCHMARK_HPP_
+
 #include <chrono>
 #include <iostream>
 #include <vector>
@@ -10,9 +13,8 @@ using rep_t = double;
 using elapsed_t = std::chrono::duration<rep_t, std::micro>;
 using average_t = std::chrono::duration<rep_t, std::nano>;
 
-// do_not_optimize works very well for gcc clang and msvc
-// however there may be differences in overhead
-// Other compilers do not have a do_not_optimize implementation
+// do_not_optimize works very well for gcc and clang
+// msvc works aswell, however results are not always accurate
 
 #if __GNUC__ || __clang__
 template<typename T>
@@ -52,3 +54,5 @@ inline void do_not_optimize(T const&)
   auto __benchmark_iterations = __ITERATIONS * __OPERATIONS_PER_ITERATION;                                                                  \
   std::cout << "[ ELAPSED ] " << (__benchmark_elapsed.count() * 0.001) << " ms (" << __benchmark_iterations << " iterations)" << std::endl; \
   std::cout << "[ AVERAGE ] " << (__benchmark_average.count() / __benchmark_iterations) << " ns" << std::endl;
+
+#endif

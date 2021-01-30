@@ -1,4 +1,5 @@
-#pragma once
+#ifndef _XECS_ARCHETYPE_HPP_
+#define _XECS_ARCHETYPE_HPP_
 
 #include <cstdlib>
 #include <limits>
@@ -335,3 +336,5 @@ namespace internal
 struct archetype_list_builder : internal::archetype_list_builder<>
 {};
 } // namespace xecs
+
+#endif
