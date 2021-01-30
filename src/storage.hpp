@@ -517,15 +517,15 @@ public:
   {}
 
   // clang-format off
-  iterator& operator+=(const size_type value) { _pos += value; return *this; }
-  iterator& operator-=(const size_type value) { _pos -= value; return *this; }
+  iterator& operator+=(const size_type value) { _pos -= value; return *this; }
+  iterator& operator-=(const size_type value) { _pos += value; return *this; }
   // clang-format on
 
   iterator& operator++() { return --_pos, *this; }
   iterator& operator--() { return ++_pos, *this; }
 
-  iterator operator+(const size_type value) const { return { _pos - value }; }
-  iterator operator-(const size_type value) const { return { _pos + value }; }
+  iterator operator+(const size_type value) const { return { _ptr, _pos - value }; }
+  iterator operator-(const size_type value) const { return { _ptr, _pos + value }; }
 
   bool operator==(const iterator other) const { return other._pos == _pos; }
   bool operator!=(const iterator other) const { return other._pos != _pos; }
