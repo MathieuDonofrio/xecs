@@ -2,6 +2,8 @@
 # Test
 #
 
+cmake_minimum_required(VERSION 3.15)
+
 include(FetchContent)
 
 set(THREADS_PREFER_PTHREAD_FLAG ON)
@@ -10,8 +12,7 @@ find_package(Threads REQUIRED)
 FetchContent_Declare(
     googletest
     GIT_REPOSITORY https://github.com/google/googletest.git
-    GIT_TAG master
-    GIT_SHALLOW 1
+    GIT_TAG release-1.10.0
 )
 
 FetchContent_MakeAvailable(googletest)

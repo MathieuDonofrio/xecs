@@ -8,12 +8,14 @@ High priority!
 
 These tasks may be minor bug fixes or optimizations. They do not change the interface.
 
-NONE
+- [x] Runtime library bug with CMake and MSVC 
+- [ ] Test build error in WSL Ubuntu
 
 ## Minor
 
 These tasks are small or large updates that are non breaking for non deprecated functionalities.
 
+- [ ] Add cmake format
 - [ ] Replace malloc/new with better allocation
 - [ ] Ability to make an entity swap archetypes
 - [ ] Compile-time archetype sorting for views
