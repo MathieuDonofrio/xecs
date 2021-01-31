@@ -21,7 +21,6 @@ These tasks are small or large updates that are non breaking for non deprecated 
 - [ ] Shared components
 - [ ] Static entities
 - [ ] Multi-threaded support
-- [ ] Serialization
 
 ## Major
 
@@ -34,3 +33,4 @@ These tasks are large updates with potentially breaking changes.
 These tasks are experiments to be done in the experimental branch.
 
 - [ ] Entity id's with extra storage bits
+- [ ] Native Serialization

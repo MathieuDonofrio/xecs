@@ -47,17 +47,6 @@ My goal for this project is to provide a simple but powerfull implementation. As
 
 Altho there is still work to be done, I believe that I have accomplished my goals reasonably quite well. I am proud of my implementation thus far, so I have open-sourced it and hope that it will help others make high-performance applications or learn about ECS.
 
-## Future
-
-I have several things I would like to implement in the future, here are a few:
-
-* Serialization
-* Multi-threaded support
-* Shared Components
-* Static entites
-
-I have built the libary with these already in mind, and I have quite a few good ideas but i'm still taking my time to make sure I can implement it in the best way possible in future versions.
-
 # Code Examples
 
 ## Tutorial
