@@ -33,7 +33,7 @@ if(MSVC)
 else()
   add_compile_options(
     -Wall -Wextra -Wpedantic
-    $<$<CONFIG:Debug>:-O0 -g>
+    $<$<CONFIG:Debug>:-O0>
     $<$<CONFIG:Release>:-O3>
   )
 endif()

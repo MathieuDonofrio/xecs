@@ -740,6 +740,9 @@ void Iterate_STDVectorToCompare_WithSomeWork()
   }
 
   benchmark::do_not_optimize(sum);
+  benchmark::do_not_optimize(entities.size());
+  benchmark::do_not_optimize(positions.size());
+  benchmark::do_not_optimize(velocities.size());
 }
 
 void Iterate_WithSomeWork()
