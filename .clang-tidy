@@ -1,3 +1,4 @@
+---
 Checks: " \
     bugprone-*, \
     cert-*, \
@@ -30,3 +31,4 @@ Checks: " \
 WarningsAsErrors: ''
 HeaderFilterRegex: ''
 FormatStyle:     none
+---
