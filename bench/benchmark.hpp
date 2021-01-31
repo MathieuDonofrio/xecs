@@ -1,5 +1,5 @@
-#ifndef _BENCHMARK_HPP_
-#define _BENCHMARK_HPP_
+#ifndef XECS_BENCHMARK_HPP
+#define XECS_BENCHMARK_HPP
 
 #include <chrono>
 #include <iostream>
@@ -42,16 +42,18 @@ inline void do_not_optimize(T const&)
 
 } // namespace benchmark
 
+// NOLINTNEXTLINE
 #define BEGIN_BENCHMARK(__NAME)                        \
   std::cout << "[=========] " << std::endl;            \
   std::cout << "[ RUN     ] " << #__NAME << std::endl; \
   benchmark::time_point_t __benchmark_start = benchmark::clock_t::now();
 
+// NOLINTNEXTLINE
 #define END_BENCHMARK(__ITERATIONS, __OPERATIONS_PER_ITERATION)                                                                             \
   benchmark::time_point_t __benchmark_end = benchmark::clock_t::now();                                                                      \
   benchmark::elapsed_t __benchmark_elapsed = __benchmark_end - __benchmark_start;                                                           \
   benchmark::average_t __benchmark_average = __benchmark_end - __benchmark_start;                                                           \
-  auto __benchmark_iterations = __ITERATIONS * __OPERATIONS_PER_ITERATION;                                                                  \
+  auto __benchmark_iterations = (__ITERATIONS) * (__OPERATIONS_PER_ITERATION);                                                                  \
   std::cout << "[ ELAPSED ] " << (__benchmark_elapsed.count() * 0.001) << " ms (" << __benchmark_iterations << " iterations)" << std::endl; \
   std::cout << "[ AVERAGE ] " << (__benchmark_average.count() / __benchmark_iterations) << " ns" << std::endl;
 

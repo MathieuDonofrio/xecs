@@ -16,6 +16,10 @@ project(
   LANGUAGES CXX
 )
 
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Debug)
+endif()
+
 #
 # Compiler Options
 #
@@ -29,7 +33,7 @@ if(MSVC)
 else()
   add_compile_options(
     -Wall -Wextra -Wpedantic
-    $<$<CONFIG:Debug>:-O0>
+    $<$<CONFIG:Debug>:-O0 -g>
     $<$<CONFIG:Release>:-O3>
   )
 endif()

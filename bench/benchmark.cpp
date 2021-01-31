@@ -1,4 +1,4 @@
-#include "benchmark.h"
+#include "benchmark.hpp"
 
 #include <registry.hpp>
 #include <vector>

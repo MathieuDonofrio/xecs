@@ -1,5 +1,5 @@
-#ifndef _XECS_REGISTRY_HPP_
-#define _XECS_REGISTRY_HPP_
+#ifndef XECS_REGISTRY_HPP
+#define XECS_REGISTRY_HPP
 
 #include "archetype.hpp"
 #include "entity_manager.hpp"
@@ -71,6 +71,7 @@ public:
   registry(const registry&) = delete;
   registry(registry&&) = delete;
   registry& operator=(const registry&) = delete;
+  registry& operator=(registry&&) = delete;
 
   /**
    * @brief Create an entity and initializes it with the given components.
@@ -301,7 +302,7 @@ public:
   static_assert(size_v<archetype_list_view_type> > 0, "View must contain atleast one archetype");
 
 public:
-  basic_view(registry_type* registry) : _registry { registry } {}
+  explicit basic_view(registry_type* registry) : _registry { registry } {}
 
   /**
    * @brief Iterates over every entity that has the specified components and calls the given function.

@@ -1,6 +1,7 @@
-#ifndef _XECS_ENTITY_MANAGER_HPP_
-#define _XECS_ENTITY_MANAGER_HPP_
+#ifndef XECS_ENTITY_MANAGER_HPP
+#define XECS_ENTITY_MANAGER_HPP
 
+#include <array>
 #include <cstdlib>
 #include <cstring>
 #include <limits>
@@ -83,6 +84,7 @@ public:
   entity_manager(const entity_manager&) = delete;
   entity_manager(entity_manager&&) = delete;
   entity_manager& operator=(const entity_manager&) = delete;
+  entity_manager& operator=(entity_manager&&) = delete;
 
   /**
    * @brief Generates a unique entity.

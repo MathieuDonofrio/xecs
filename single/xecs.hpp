@@ -1,5 +1,5 @@
-#ifndef _XECS_ARCHETYPE_HPP_
-#define _XECS_ARCHETYPE_HPP_
+#ifndef XECS_ARCHETYPE_HPP
+#define XECS_ARCHETYPE_HPP
 
 #include <cstdlib>
 #include <limits>
@@ -33,7 +33,7 @@ struct size<List<Types...>> : std::integral_constant<size_t, sizeof...(Types)>
 {};
 
 template<typename List>
-inline constexpr auto size_v = size<List>::value;
+constexpr auto size_v = size<List>::value;
 
 /**
  * @brief Checks if a list is empty.
@@ -48,7 +48,7 @@ struct empty<List<Types...>> : std::bool_constant<sizeof...(Types) == 0>
 {};
 
 template<typename List>
-inline constexpr auto empty_v = empty<List>::value;
+constexpr auto empty_v = empty<List>::value;
 
 /**
  * @brief Checks if a list contains a type.
@@ -70,7 +70,7 @@ struct contains<Type, List<Types...>> : std::disjunction<std::is_same<Type, Type
  * @tparam List List to check
  */
 template<typename Type, typename List>
-inline constexpr auto contains_v = contains<Type, List>::value;
+constexpr auto contains_v = contains<Type, List>::value;
 
 /**
  * @brief Checks if list contains atleast all required types.
@@ -86,7 +86,7 @@ struct contains_all : std::conjunction<contains<Types, List>...>
 {};
 
 template<typename List, typename... Types>
-inline constexpr auto contains_all_v = contains_all<List, Types...>::value;
+constexpr auto contains_all_v = contains_all<List, Types...>::value;
 
 /**
  * @brief Checks if all types are unique.
@@ -105,7 +105,7 @@ struct unique_types<Type, Types...>
 {};
 
 template<typename... Types>
-inline constexpr auto unique_types_v = unique_types<Types...>::value;
+constexpr auto unique_types_v = unique_types<Types...>::value;
 
 /**
  * @brief Checks if two lists contain the same types.
@@ -124,7 +124,7 @@ struct is_same_types<AList<ATypes...>, BList<BTypes...>>
 {};
 
 template<typename AList, typename BList>
-inline constexpr auto is_same_types_v = is_same_types<AList, BList>::value;
+constexpr auto is_same_types_v = is_same_types<AList, BList>::value;
 
 /**
  * @brief Checks if all lists are unique in terms of types.
@@ -145,7 +145,7 @@ struct unique_lists<List, Lists...>
 {};
 
 template<typename... Lists>
-inline constexpr auto unique_lists_v = unique_lists<Lists...>::value;
+constexpr auto unique_lists_v = unique_lists<Lists...>::value;
 
 /**
  * @brief Concatenates a list and a type.
@@ -294,7 +294,7 @@ struct verify_archetype;
 template<typename... Components>
 struct verify_archetype<archetype<Components...>> : verify_component<Components>...
 {
-  static_assert(unique_types_v<Components...>, "Every components must be unique (archetype is a SET of components)");
+  static_assert(unique_types_v<Components...>, "Every component must be unique (archetype is a SET of components)");
 };
 
 /**
@@ -339,9 +339,10 @@ struct archetype_list_builder : internal::archetype_list_builder<>
 
 #endif
 
-#ifndef _XECS_ENTITY_MANAGER_HPP_
-#define _XECS_ENTITY_MANAGER_HPP_
+#ifndef XECS_ENTITY_MANAGER_HPP
+#define XECS_ENTITY_MANAGER_HPP
 
+#include <array>
 #include <cstdlib>
 #include <cstring>
 #include <limits>
@@ -424,6 +425,7 @@ public:
   entity_manager(const entity_manager&) = delete;
   entity_manager(entity_manager&&) = delete;
   entity_manager& operator=(const entity_manager&) = delete;
+  entity_manager& operator=(entity_manager&&) = delete;
 
   /**
    * @brief Generates a unique entity.
@@ -571,8 +573,8 @@ private:
 
 #endif
 
-#ifndef _XECS_STORAGE_HPP_
-#define _XECS_STORAGE_HPP_
+#ifndef XECS_STORAGE_HPP
+#define XECS_STORAGE_HPP
 
 #include <cassert>
 #include <cstdlib>
@@ -634,6 +636,7 @@ public:
   sparse_array(const sparse_array&) = delete;
   sparse_array(sparse_array&&) = delete;
   sparse_array& operator=(const sparse_array&) = delete;
+  sparse_array& operator=(sparse_array&&) = delete;
 
   /**
    * @brief Assures that the sparse array can contain the entity.
@@ -779,6 +782,7 @@ public:
   storage(const storage&) = delete;
   storage(storage&&) = delete;
   storage& operator=(const storage&) = delete;
+  storage& operator=(storage&&) = delete;
 
   /**
    * @brief Inserts a entity and all its components at once.
@@ -1153,8 +1157,8 @@ private:
 
 #endif
 
-#ifndef _XECS_REGISTRY_HPP_
-#define _XECS_REGISTRY_HPP_
+#ifndef XECS_REGISTRY_HPP
+#define XECS_REGISTRY_HPP
 
 #include <cassert>
 #include <cstdlib>
@@ -1222,6 +1226,7 @@ public:
   registry(const registry&) = delete;
   registry(registry&&) = delete;
   registry& operator=(const registry&) = delete;
+  registry& operator=(registry&&) = delete;
 
   /**
    * @brief Create an entity and initializes it with the given components.
@@ -1452,7 +1457,7 @@ public:
   static_assert(size_v<archetype_list_view_type> > 0, "View must contain atleast one archetype");
 
 public:
-  basic_view(registry_type* registry) : _registry { registry } {}
+  explicit basic_view(registry_type* registry) : _registry { registry } {}
 
   /**
    * @brief Iterates over every entity that has the specified components and calls the given function.
@@ -1593,5 +1598,3 @@ private:
 } // namespace xecs
 
 #endif
-
-

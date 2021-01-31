@@ -1,0 +1,32 @@
+Checks: " \
+    bugprone-*, \
+    cert-*, \
+    clang-analyzer-*, \
+    concurrency-*, \
+    cppcoreguidelines-avoid-non-const-global-variables, \
+    cppcoreguidelines-pro-type-cstyle-cast, \
+    modernize-concat-nested-namespaces, \
+    modernize-deprecated-*, \
+    modernize-make-shared, \
+    modernize-make-unique, \
+    modernize-raw-string-literal, \
+    modernize-redundant-void-arg, \
+    modernize-replace-*, \
+    modernize-return-braced-init-list, \
+    modernize-unary-static-assert, \
+    modernize-use-auto, \
+    modernize-use-default-member-init, \
+    modernize-use-emplace, \
+    modernize-use-equals-*, \
+    modernize-use-nodiscard, \
+    modernize-use-noexcept, \
+    modernize-use-nullptr, \
+    modernize-use-override, \
+    modernize-use-transparent-functors, \
+    modernize-use-using, \
+    performance-*, \
+    portability-*, \
+    "
+WarningsAsErrors: ''
+HeaderFilterRegex: ''
+FormatStyle:     none

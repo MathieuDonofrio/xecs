@@ -1,5 +1,5 @@
-#ifndef _XECS_STORAGE_HPP_
-#define _XECS_STORAGE_HPP_
+#ifndef XECS_STORAGE_HPP
+#define XECS_STORAGE_HPP
 
 #include "archetype.hpp"
 
@@ -63,6 +63,7 @@ public:
   sparse_array(const sparse_array&) = delete;
   sparse_array(sparse_array&&) = delete;
   sparse_array& operator=(const sparse_array&) = delete;
+  sparse_array& operator=(sparse_array&&) = delete;
 
   /**
    * @brief Assures that the sparse array can contain the entity.
@@ -208,6 +209,7 @@ public:
   storage(const storage&) = delete;
   storage(storage&&) = delete;
   storage& operator=(const storage&) = delete;
+  storage& operator=(storage&&) = delete;
 
   /**
    * @brief Inserts a entity and all its components at once.
