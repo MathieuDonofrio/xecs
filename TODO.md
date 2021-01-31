@@ -18,7 +18,7 @@ These tasks are small or large updates that are non breaking for non deprecated 
 - [ ] Add cmake format
 - [ ] Replace malloc/new with better allocation
 - [ ] Ability to make an entity swap archetypes
-- [ ] Compile-time archetype sorting for views
+- [x] Compile-time archetype sorting for views
 - [ ] Archetype list generation from component list
 - [ ] Shared components
 - [ ] Static entities
@@ -34,5 +34,5 @@ These tasks are large updates with potentially breaking changes.
 
 These tasks are experiments to be done in the experimental branch.
 
-- [ ] Entity id's with extra storage bits
+- [ ] Entity id's with extra storage bits (versions?)
 - [ ] Native Serialization

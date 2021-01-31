@@ -249,9 +249,13 @@ public:
   template<typename... Components>
   auto view() { return basic_view<Components...> { this }; }
 
-  size_t storages() { return _shared.shared(); }
+  /**
+   * @brief Returns the amount of storages in the registry.
+   * 
+   * @return size_t Amount of storages.
+   */
+  size_t storages() const { return _shared.shared(); }
 
-private:
   /**
    * @brief Accesses the storage for the specified archetype.
    * 
@@ -259,11 +263,16 @@ private:
    * 
    * Obtaining the storage of an archetype is essentially free.
    * 
+   * @warning You should not directly access the storage unless you
+   * know what your doing.
+   * 
    * @tparam Archetype The archetype to get the storage for
    * @return auto& The storage of the specified archetype
    */
   template<typename Archetype>
   auto& access() { return std::get<storage<entity_type, Archetype>>(_pool); }
+
+private:
 
   /**
    * @brief Set the up shared sparse_set

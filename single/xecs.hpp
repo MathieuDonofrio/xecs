@@ -28,7 +28,7 @@ struct list
 template<typename List>
 struct size;
 
-template<typename... Types, template<typename...> typename List>
+template<typename... Types, template<typename...> class List>
 struct size<List<Types...>> : std::integral_constant<size_t, sizeof...(Types)>
 {};
 
@@ -43,12 +43,64 @@ constexpr auto size_v = size<List>::value;
 template<typename List>
 struct empty;
 
-template<typename... Types, template<typename...> typename List>
+template<typename... Types, template<typename...> class List>
 struct empty<List<Types...>> : std::bool_constant<sizeof...(Types) == 0>
 {};
 
 template<typename List>
 constexpr auto empty_v = empty<List>::value;
+
+/**
+ * @brief Finds the index of the specified type in the list.
+ * 
+ * Returns size of list if nothing was found.
+ * 
+ * @tparam Type the type to find
+ * @tparam List The list to operate on
+ * @tparam I Current search index (default start at 0)
+ */
+template<typename Type, typename List, size_t I = 0>
+struct find;
+
+template<typename Type, typename... Types, template<typename...> class List, size_t I>
+struct find<Type, List<Types...>, I> : std::integral_constant<size_t, I>
+{};
+
+template<typename Type, typename Head, typename... Types, template<typename...> class List, size_t I>
+struct find<Type, List<Head, Types...>, I>
+  : std::conditional_t<std::is_same_v<Type, Head>, std::integral_constant<size_t, I>, find<Type, List<Types...>, I + 1>>
+{};
+
+template<typename Type, typename List>
+constexpr auto find_v = find<Type, List, 0>::value;
+
+/**
+ * @brief Finds the type at the specified index in the list.
+ * 
+ * @tparam I Index in the list
+ * @tparam List The list to operate on
+ */
+template<size_t I, typename List>
+struct at;
+
+template<size_t I, typename... Types, template<typename...> class List>
+struct at<I, List<Types...>>
+{
+  using type = List<>;
+};
+
+template<size_t I, typename Type, typename... Types, template<typename...> class List>
+struct at<I, List<Type, Types...>>
+{
+private:
+  using next = typename at<I - 1, List<Types...>>::type;
+
+public:
+  using type = typename std::conditional_t<I == 0, Type, next>;
+};
+
+template<size_t I, typename List>
+using at_t = typename at<I, List>::type;
 
 /**
  * @brief Checks if a list contains a type.
@@ -59,7 +111,7 @@ constexpr auto empty_v = empty<List>::value;
 template<typename Type, typename List>
 struct contains;
 
-template<typename Type, typename... Types, template<typename...> typename List>
+template<typename Type, typename... Types, template<typename...> class List>
 struct contains<Type, List<Types...>> : std::disjunction<std::is_same<Type, Types>...>
 {};
 
@@ -118,7 +170,7 @@ constexpr auto unique_types_v = unique_types<Types...>::value;
 template<typename AList, typename BList>
 struct is_same_types;
 
-template<typename... ATypes, template<typename...> typename AList, typename... BTypes, template<typename...> typename BList>
+template<typename... ATypes, template<typename...> class AList, typename... BTypes, template<typename...> class BList>
 struct is_same_types<AList<ATypes...>, BList<BTypes...>>
   : std::conjunction<std::bool_constant<sizeof...(ATypes) == sizeof...(BTypes)>, contains_all<AList<ATypes...>, BTypes...>>
 {};
@@ -148,22 +200,40 @@ template<typename... Lists>
 constexpr auto unique_lists_v = unique_lists<Lists...>::value;
 
 /**
- * @brief Concatenates a list and a type.
+ * @brief Adds a type to the front of a list.
  * 
- * @tparam Type Type to concatenate (add)
- * @tparam List List to concatenante type to
+ * @tparam Type Type to add
+ * @tparam List List to add type to
  */
 template<typename Type, typename List>
-struct concat;
+struct push_front;
 
-template<typename Type, typename... Types, template<typename...> typename List>
-struct concat<Type, List<Types...>>
+template<typename Type, typename... Types, template<typename...> class List>
+struct push_front<Type, List<Types...>>
 {
   using type = List<Type, Types...>;
 };
 
 template<typename Type, typename List>
-using concat_t = typename concat<Type, List>::type;
+using push_front_t = typename push_front<Type, List>::type;
+
+/**
+ * @brief Adds a type to the back of a list.
+ * 
+ * @tparam Type Type to add
+ * @tparam List List to add type to
+ */
+template<typename Type, typename List>
+struct push_back;
+
+template<typename Type, typename... Types, template<typename...> class List>
+struct push_back<Type, List<Types...>>
+{
+  using type = List<Types..., Type>;
+};
+
+template<typename Type, typename List>
+using push_back_t = typename push_back<Type, List>::type;
 
 /**
  * @brief Finds the first occurence of a list that.
@@ -179,13 +249,13 @@ using concat_t = typename concat<Type, List>::type;
 template<typename ListOfLists, typename... Types>
 struct find_for;
 
-template<typename... Lists, template<typename...> typename ListOfLists, typename... Types>
+template<typename... Lists, template<typename...> class ListOfLists, typename... Types>
 struct find_for<ListOfLists<Lists...>, Types...>
 {
   using type = list<>;
 };
 
-template<typename HeadList, typename... Lists, template<typename...> typename ListOfLists, typename... Types>
+template<typename HeadList, typename... Lists, template<typename...> class ListOfLists, typename... Types>
 struct find_for<ListOfLists<HeadList, Lists...>, Types...>
 {
 private:
@@ -209,18 +279,20 @@ using find_for_t = typename find_for<ListOfLists, RequiredTypes...>::type;
 template<typename ListOfLists, typename... RequiredTypes>
 struct prune_for;
 
-template<typename... Lists, template<typename...> typename ListOfLists, typename... RequiredTypes>
+template<typename... Lists, template<typename...> class ListOfLists, typename... RequiredTypes>
 struct prune_for<ListOfLists<Lists...>, RequiredTypes...>
 {
   using type = list<>;
 };
 
-template<typename HeadList, typename... Lists, template<typename...> typename ListOfLists, typename... RequiredTypes>
+template<typename HeadList, typename... Lists, template<typename...> class ListOfLists, typename... RequiredTypes>
 struct prune_for<ListOfLists<HeadList, Lists...>, RequiredTypes...>
 {
 private:
   using next = typename prune_for<ListOfLists<Lists...>, RequiredTypes...>::type;
-  using accept = typename concat<HeadList, next>::type;
+  using to_front = typename push_front<HeadList, next>::type; // Can make certain operations O(1)
+  using to_back = typename push_back<HeadList, next>::type;
+  using accept = typename std::conditional_t<size_v<HeadList> == sizeof...(RequiredTypes), to_front, to_back>;
 
 public:
   using type = typename std::conditional_t<contains_all<HeadList, RequiredTypes...>::value, accept, next>;
@@ -230,32 +302,17 @@ template<typename ListOfLists, typename... RequiredTypes>
 using prune_for_t = typename prune_for<ListOfLists, RequiredTypes...>::type;
 
 /**
- * @brief Finds the type at the specified index in the list.
+ * @brief Tries to place the closes list to the specified types in front.
  * 
- * @tparam I Index in the list
- * @tparam List The list to operate on
+ * This can allow certain operations to be made O(1).
+ * 
+ * @warning Does not do a compleate sort.
+ * 
+ * @tparam ListOfLists A List of lists arrange
+ * @tparam Types Types that the lists of lists gets arranged for.
  */
-template<size_t I, typename List>
-struct at;
-
-template<size_t I, typename... Types, template<typename...> typename List>
-struct at<I, List<Types...>>
-{
-  using type = List<>;
-};
-
-template<size_t I, typename Type, typename... Types, template<typename...> typename List>
-struct at<I, List<Type, Types...>>
-{
-private:
-  using next = typename at<I - 1, List<Types...>>::type;
-
-public:
-  using type = typename std::conditional_t<I == 0, Type, next>;
-};
-
-template<size_t I, typename List>
-using at_t = typename at<I, List>::type;
+template<typename ListOfLists, typename... Types>
+struct optimize_order;
 
 /**
  * @brief Assert's a component to verify that is is valid.
@@ -1404,9 +1461,13 @@ public:
   template<typename... Components>
   auto view() { return basic_view<Components...> { this }; }
 
-  size_t storages() { return _shared.shared(); }
+  /**
+   * @brief Returns the amount of storages in the registry.
+   * 
+   * @return size_t Amount of storages.
+   */
+  size_t storages() const { return _shared.shared(); }
 
-private:
   /**
    * @brief Accesses the storage for the specified archetype.
    * 
@@ -1414,12 +1475,16 @@ private:
    * 
    * Obtaining the storage of an archetype is essentially free.
    * 
+   * @warning You should not directly access the storage unless you
+   * know what your doing.
+   * 
    * @tparam Archetype The archetype to get the storage for
    * @return auto& The storage of the specified archetype
    */
   template<typename Archetype>
   auto& access() { return std::get<storage<entity_type, Archetype>>(_pool); }
 
+private:
   /**
    * @brief Set the up shared sparse_set
    * 
