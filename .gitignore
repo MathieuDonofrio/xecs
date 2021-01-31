@@ -13,6 +13,7 @@ _deps
 
 # Build
 build
+cmake-build-*
 
 # IDEs
 .vs
