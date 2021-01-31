@@ -5,6 +5,14 @@
 cmake_minimum_required(VERSION 3.14)
 
 #
+# Guard
+#
+
+if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
+    message(FATAL_ERROR "You cannot build in source. Use a build directory!")
+endif()
+
+#
 # Project Configuration
 #
 
