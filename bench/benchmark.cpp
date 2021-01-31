@@ -781,7 +781,7 @@ void Iterate_WithSomeWork()
 
   double sum = 0;
 
-  registry.for_each<Position, Velocity>([&sum](auto entity, auto& position, auto& velocity)
+  registry.for_each<Position, Velocity>([&sum](auto, auto& position, auto& velocity)
     { sum += position.x + position.y + velocity.x + velocity.y; });
 
   benchmark::do_not_optimize(sum);

@@ -9,7 +9,7 @@ High priority!
 These tasks may be minor bug fixes or optimizations. They do not change the interface.
 
 - [x] Runtime library bug with CMake and MSVC 
-- [ ] Test build error in WSL Ubuntu
+- [x] Test build error in WSL Ubuntu
 
 ## Minor
 
