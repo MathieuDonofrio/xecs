@@ -15,7 +15,7 @@ These tasks may be minor bug fixes or optimizations. They do not change the inte
 
 These tasks are small or large updates that are non breaking for non deprecated functionalities.
 
-- [ ] Doxygen
+- [x] Doxygen
 - [ ] Replace malloc/new with better allocation
 - [ ] Ability to make an entity swap archetypes
 - [x] Compile-time archetype sorting for views

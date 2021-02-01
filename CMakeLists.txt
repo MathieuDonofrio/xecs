@@ -49,3 +49,17 @@ option(XECS_BUILD_BENCHMARKING "Enable building with benchmarks" OFF)
 if(XECS_BUILD_BENCHMARKING)
   add_subdirectory(bench)
 endif()
+
+#
+# Documentation
+#
+
+option(XECS_BUILD_DOCUMENTATION "Enable doxygen doc builds of source" OFF)
+
+if(XECS_BUILD_BENCHMARKING)
+  set(DOXYGEN_CALLER_GRAPH YES)
+  set(DOXYGEN_CALL_GRAPH YES)
+  set(DOXYGEN_EXTRACT_ALL YES)
+  find_package(Doxygen REQUIRED dot)
+  doxygen_add_docs(doxygen-docs ${XECS_SOURCE_DIR}/src)
+endif()
