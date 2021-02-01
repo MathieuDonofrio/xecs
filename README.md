@@ -51,13 +51,16 @@ Altho there is still work to be done, I believe that I have accomplished my goal
 
 ## Tutorial
 
-### Include
+<details>
+<summary>Include</summary>
 
 ```cpp
 #include <xecs.hpp>
 ```
+</details>
 
-### Component creation
+<details>
+<summary>Component Creation</summary>
 
 Components are simply just structs.
 
@@ -75,8 +78,10 @@ struct Velocity
 };
 
 ```
+</details>
 
-### Compile-time configuration
+<details>
+<summary>Compile-time configuration</summary>
 
 You must first choose a unsigned int type to be your entity type.
 
@@ -92,8 +97,10 @@ using archetypes = xecs::archetype_list_builder::
   add<xecs::archetype<Position, Velocity>>::
   build;
 ```
+</details>
 
-### Registry creation
+<details>
+<summary>Registry creation</summary>
 
 A registry is where your entities and components are stored and managed.
 
@@ -101,7 +108,10 @@ A registry is where your entities and components are stored and managed.
 xecs::registry<entity, archetypes> registry;
 ```
 
-### Entity creation and initialization
+</details>
+
+<details>
+<summary>Entity creation & initialization</summary>
 
 Call the create method with all the components that the entity will have (The archetype of the component).
 
@@ -115,7 +125,10 @@ Example for archetype [Position, Velocity]:
 registry.create(Position { 5, 99 }, Velocity { 3, 5 });
 ```
 
-### Entity destruction
+</details>
+
+<details>
+<summary>Entity destruction</summary>
 
 Call the destroy method and pass the entity.
 
@@ -125,7 +138,10 @@ entity entity_to_destroy = registry.create(Position { });
 registry.destroy(entity_to_destroy);
 ```
 
-### Entity component unpacking
+</details>
+
+<details>
+<summary>Component unpacking</summary>
 
 You can call the unpack method to obtain a reference of the component your trying to access.
 
@@ -136,7 +152,10 @@ registry.unpack<Position>(entity_to_unpack) = Position { 1, 1 };
 registry.unpack<Velocity>(entity_to_unpack) = Velocity { 2, 2 };
 ```
 
-### Iterating
+</details>
+
+<details>
+<summary>Iterating</summary>
 
 Iterate over all entity identifiers
 
@@ -176,6 +195,8 @@ view.for_each([](const auto entity, const auto& position, const auto& velocity)
 });
 ```
 
+</details>
+
 # Build Instructions
 
 ## Requirements
@@ -206,17 +227,25 @@ The simplest way would be to simply add the single header file `single/xecs.hpp`
 
 The cmake option `XECS_BUILD_TESTING` is used to determine if testing will be built.
 
-Using visual studio:
+<details>
+<summary>Using visual studio</summary>
+
 * `cd build`
 * `cmake -DXECS_BUILD_TESTING=ON ..`
 * Open the generated solution
 * Build and run the `test` project
 
-Using make:
+</details>
+
+<details>
+<summary>Using make</summary>
+
 * `$ cd build`
 * `$ cmake -DXECS_BUILD_TESTING=ON ..`
 * `$ make`
 * `$ ./test/tests`
+
+</details>
 
 ## Benchmarks
 
@@ -226,17 +255,25 @@ You must make sure your are in release mode, or else compiler optimizations wont
 
 The cmake option `XECS_BUILD_BENCHMAKING` is used to determine if benchmarking will be built.
 
-Using visual studio:
+<details>
+<summary>Using visual studio</summary>
+
 * `cd build`
 * `cmake -XECS_BUILD_BENCHMAKING=ON ..`
 * Open the generated solution
 * Set your build to release mode
 * Build and run the `benchmarks` project
 
-Using make:
+</details>
+
+<details>
+<summary>Using make</summary>
+
 * `$ cd build`
 * `$ cmake -DCMAKE_BUILD_TYPE=Release -XECS_BUILD_BENCHMAKING=ON ..`
 * `$ make`
 * `$ ./bench/benchmarks`
+
+</details>
 
 

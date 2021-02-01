@@ -1,8 +1,8 @@
 #include "benchmark.hpp"
 
 #include <registry.hpp>
-#include <vector>
 #include <string>
+#include <vector>
 
 using namespace xecs;
 
@@ -308,7 +308,7 @@ void Destroy_ThreeArchetypes()
   {
     switch (i % 3)
     {
-    case 0: entities.push_back(registry.create(Position {})); break;
+    case 0: entities.push_back(registry.create(Position {})); break; // NOLINT
     case 1: entities.push_back(registry.create(Velocity {})); break;
     case 2: entities.push_back(registry.create(Color {})); break;
     }
@@ -351,7 +351,7 @@ void Destroy_TenArchetypesTwoComponents()
   {
     switch (i % 10)
     {
-    case 0: entities.push_back(registry.create(Position {}, Component<0> {})); break;
+    case 0: entities.push_back(registry.create(Position {}, Component<0> {})); break; // NOLINT
     case 1: entities.push_back(registry.create(Position {}, Component<1> {})); break;
     case 2: entities.push_back(registry.create(Position {}, Component<2> {})); break;
     case 3: entities.push_back(registry.create(Position {}, Component<3> {})); break;
@@ -410,7 +410,7 @@ void Destroy_TenArchetypesTwoComponents_KnownTypes()
   {
     switch (i % 10)
     {
-    case 0: entities.push_back(registry.create(Position {}, Component<0> {})); break;
+    case 0: entities.push_back(registry.create(Position {}, Component<0> {})); break; // NOLINT
     case 1: entities.push_back(registry.create(Position {}, Component<1> {})); break;
     case 2: entities.push_back(registry.create(Position {}, Component<2> {})); break;
     case 3: entities.push_back(registry.create(Position {}, Component<3> {})); break;
@@ -454,7 +454,7 @@ void Iterate_STD_Vector_AsComparaison()
 
   for (size_t i = 0; i < iterations; i++)
   {
-    v.push_back(i);
+    v.push_back(static_cast<entity_type>(i));
   }
 
   BEGIN_BENCHMARK(Iterate_STD_Vector_AsComparaison);
@@ -673,7 +673,7 @@ void Iterate_TenArchetypesNoComponents()
   {
     switch (i % 10)
     {
-    case 0: registry.create(Component<0> {}); break;
+    case 0: registry.create(Component<0> {}); break; // NOLINT
     case 1: registry.create(Component<1> {}); break;
     case 2: registry.create(Component<2> {}); break;
     case 3: registry.create(Component<3> {}); break;
@@ -707,7 +707,7 @@ void Iterate_STDVectorToCompare_WithSomeWork()
   for (size_t i = 0; i < iterations; i++)
   {
     entities.push_back(i);
-    double d = static_cast<double>(i);
+    auto d = static_cast<double>(i);
     positions.push_back(Position { d, d });
     velocities.push_back(Velocity { d, d });
   }
@@ -759,7 +759,7 @@ void Iterate_WithSomeWork()
 
   for (size_t i = 0; i < iterations; i++)
   {
-    double d = static_cast<double>(i);
+    auto d = static_cast<double>(i);
     if (i % 2)
       registry.create(Position { d, d }, Velocity { d, d });
     else

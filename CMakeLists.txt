@@ -5,16 +5,10 @@
 cmake_minimum_required(VERSION 3.15)
 
 #
-# Guard
-#
-
-if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
-    message(FATAL_ERROR "You cannot build in source. Use a build directory!")
-endif()
-
-#
 # Project Configuration
 #
+
+include(cmake/PreventInSourceBuilds.cmake)
 
 project(
   XECS
@@ -24,27 +18,7 @@ project(
   LANGUAGES CXX
 )
 
-if(NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE Debug)
-endif()
-
-#
-# Compiler Options
-#
-
-if(MSVC)
-  add_compile_options(
-    /W4
-    $<$<CONFIG:Debug>:/Od>
-    $<$<CONFIG:Release>:/O2>
-  )
-else()
-  add_compile_options(
-    -Wall -Wextra -Wpedantic
-    $<$<CONFIG:Debug>:-O0>
-    $<$<CONFIG:Release>:-O3>
-  )
-endif()
+include(cmake/CompilerOptions.cmake)
 
 #
 # Target

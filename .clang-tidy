@@ -6,6 +6,13 @@ Checks: " \
     concurrency-*, \
     cppcoreguidelines-avoid-non-const-global-variables, \
     cppcoreguidelines-pro-type-cstyle-cast, \
+    cppcoreguidelines-narrowing-conversions, \
+    cppcoreguidelines-special-member-functions, \
+    misc-definitions-in-headers, \
+    misc-misplaced-const, \
+    misc-new-delete-overloads, \
+    misc-non-copyable-objects, \
+    misc-unused-*, \
     modernize-concat-nested-namespaces, \
     modernize-deprecated-*, \
     modernize-make-shared, \
@@ -28,7 +35,6 @@ Checks: " \
     performance-*, \
     portability-*, \
     "
-WarningsAsErrors: ''
+WarningsAsErrors: '*'
 HeaderFilterRegex: ''
 FormatStyle:     none
----

@@ -68,6 +68,9 @@ public:
     setup_shared_memory();
   }
 
+  ~registry()
+  {}
+
   registry(const registry&) = delete;
   registry(registry&&) = delete;
   registry& operator=(const registry&) = delete;
@@ -273,7 +276,6 @@ public:
   auto& access() { return std::get<storage<entity_type, Archetype>>(_pool); }
 
 private:
-
   /**
    * @brief Set the up shared sparse_set
    * 

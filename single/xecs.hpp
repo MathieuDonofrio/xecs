@@ -677,7 +677,7 @@ public:
    * @brief Construct a new sparse array object
    */
   sparse_array()
-    : _capacity(0), _shared(0)
+    : _capacity(32), _shared(0)
   {
     _array = static_cast<array_type>(std::malloc(_capacity * sizeof(entity_type)));
   }
@@ -813,11 +813,10 @@ public:
    * @brief Construct a new storage object
    */
   storage()
-    : _size(0), _capacity(0)
+    : _size(0), _capacity(4)
   {
     _sparse = new sparse_array<entity_type>();
 
-    // Default capacity is zero so we allocate nothing, but we still want the pointers
     _dense = static_cast<dense_type>(std::malloc(_capacity * sizeof(entity_type)));
     (alloc_array<Components>(), ...);
   }
@@ -972,7 +971,7 @@ public:
    * 
    * @param sparse The sparse_array to share with this storage
    */
-  void share(const sparse_type sparse)
+  void share(sparse_type sparse)
   {
     if (_size != 0) return;
 
@@ -1279,6 +1278,9 @@ public:
   {
     setup_shared_memory();
   }
+
+  ~registry()
+  {}
 
   registry(const registry&) = delete;
   registry(registry&&) = delete;
