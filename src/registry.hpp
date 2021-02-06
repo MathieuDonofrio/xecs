@@ -123,9 +123,7 @@ public:
     static_assert(size_v<prune_for_t<list<Archetypes...>, Components...>> > 0,
       "Registry does not contain suitable archetype for provided components");
 
-    view<Components...>().erase(entity);
-
-    _manager.release(entity);
+    view<Components...>().destroy(entity);
   }
 
   /**
@@ -166,11 +164,11 @@ public:
    * Same thing as creating a view with the components you need and calling for_each.
    * 
    * @tparam Components The components types to form the view for
-   * @tparam Func The function type
-   * @param func The function to call on every iteration
+   * @tparam Callable The callable type
+   * @param Callable The callable to invoke on every iteration
    */
-  template<typename... Components, typename Func>
-  void for_each(const Func& func) { view<Components...>().for_each(func); }
+  template<typename... Components, typename Callable>
+  void for_each(const Callable& callable) { view<Components...>().for_each(callable); }
 
   /**
    * @brief Returns a reference of the stored component for the specified entity and component type.
@@ -310,10 +308,31 @@ class registry<Entity, list<Archetypes...>>::basic_view
 public:
   using archetype_list_view_type = prune_for_t<archetype_list_type, Components...>;
 
-  static_assert(size_v<archetype_list_view_type> > 0, "View must contain atleast one archetype");
+  static_assert(size_v<archetype_list_view_type> > 0, "There are no archetypes in this view");
 
 public:
   explicit basic_view(registry_type* registry) : _registry { registry } {}
+
+  /**
+   * @brief Erases an entity from the correct storage in the view.
+   * 
+   * Used internally by the registry to destroy entities. 
+   * 
+   * Unsafe and cannot be used externally because this method removes an entity without
+   * releasing the entity back into the entity_manager.
+   * 
+   * @warning Attempting to erase an entity that doesn't exist in the view results
+   * in undefined behaviour
+   * 
+   * @param entity The entity to erase
+   */
+  void destroy(const entity_type entity)
+  {
+    r_apply<0>(entity, [](auto& storage, const entity_type e)
+      { storage.erase(e); });
+
+    _registry->_manager.release(entity);
+  }
 
   /**
    * @brief Iterates over every entity that has the specified components and calls the given function.
@@ -321,26 +340,15 @@ public:
    * There is not much of a cost outside of the unpacking cost for iterating over multiple components. 
    * Actually, specifing more components may even lead to better results in some cases. Go crazy...
    * 
-   * @note This method uses recusion to iterate over all the archetypes in the view.
+   * The provided function must contain every component in the view as an argument.
    * 
-   * @tparam I Archetype index used during recursion, always leave it at 0
-   * @tparam Components The components types to form the view for
-   * @tparam Func The function type
-   * @param func The function to call on every iteration
+   * @tparam Callable Callable type
+   * @param Callable The callable to invoke on every iteration
    */
-  template<size_t I = 0, typename Func>
-  void for_each(const Func& func)
+  template<typename Callable>
+  void for_each(const Callable& invocable)
   {
-    using current = at_t<I, archetype_list_view_type>;
-
-    auto& storage = _registry->template access<current>();
-
-    for (auto it = storage.begin(); it != storage.end(); ++it)
-    {
-      func(*it, it.template unpack<Components>()...);
-    }
-
-    if constexpr (I + 1 < size_v<archetype_list_view_type>) for_each<I + 1>(func);
+    r_for_each<0, Callable>(invocable);
   }
 
   /**
@@ -351,43 +359,148 @@ public:
    * @warning Attempting to unpack an entity that is not in the view results in
    * undefined behaviour
    * 
-   * @note This method uses recusion to iterate over all the archetypes in the view.
-   * 
    * @tparam Component The component type to unpack
-   * @tparam I Archetype index used during recursion, always leave it at 0
    * @param entity Entity to unpack component for
    * @return Component& Reference to component belonging to the entity
    */
-  template<typename Component, size_t I = 0>
+  template<typename Component>
   Component& unpack(const entity_type entity)
   {
-    if constexpr (I == 0)
-      static_assert(size_v<prune_for_t<archetype_list_view_type, Component>> > 0,
-        "You cannot unpack a component type that is not included in the view");
+    static_assert(size_v<prune_for_t<archetype_list_view_type, Component>> > 0,
+      "You cannot unpack a component type that is not included in the view");
 
-    using current = at_t<I, archetype_list_view_type>;
-
-    auto& storage = _registry->template access<current>();
-
-    if constexpr (I + 1 == size_v<archetype_list_view_type>)
-      return storage.template unpack<Component>(entity);
-    else if (storage.contains(entity))
-      return storage.template unpack<Component>(entity);
-    else
-      return unpack<Component, I + 1>(entity);
+    return r_unpack<Component, 0>(entity);
   }
 
   /**
    * @brief Returns whether or not the view contains the specified entity.
    * 
-   * @note This method uses recusion to iterate over all the archetypes in the view.
-   * 
-   * @tparam I Archetype index used during recursion, always leave it at 0
    * @param entity The entity to check for
    * @return true If the view contains the entity
    */
-  template<size_t I = 0>
   bool contains(const entity_type entity)
+  {
+    return r_contains<0>(entity);
+  }
+
+  /**
+   * @brief Returns the amount of entities in the view.
+   * 
+   * Sum of size of storages of all archetypes in the view.
+   * 
+   * @return size_t The amount of entities in the view
+   */
+  size_t size()
+  {
+    return r_size<0>();
+  }
+
+private:
+  friend registry_type;
+
+  /**
+   * @brief Iterates over every entity that has the specified components and calls the given function.
+   * 
+   * This method uses recursion to iterate over every archetype in the view and then iterates
+   * over all the entities in the archetype storage calling the function and unpacking all the
+   * components in the view.
+   * 
+   * The provided function must contain every component in the view as an argument.
+   * 
+   * @tparam I Archetype index used during recursion
+   * @tparam Callable Callable type
+   * @param callable The callable to invoke on every iteration
+   */
+  template<size_t I, typename Callable>
+  void r_for_each(const Callable& callable)
+  {
+    using current = at_t<I, archetype_list_view_type>;
+
+    auto& storage = _registry->template access<current>();
+
+    for (auto it = storage.begin(); it != storage.end(); ++it)
+    {
+      callable(*it, it.template unpack<Components>()...);
+    }
+
+    if constexpr (I + 1 < size_v<archetype_list_view_type>) r_for_each<I + 1>(callable);
+  }
+
+  /**
+   * @brief Applies an action to the storage in the view that contains the entity.
+   * 
+   * This method uses recursion to iterate over every archetype in the view and checks
+   * what archetype storage the entity is contained in. Once the storage is found, the
+   * action is applied to the storage and the entity.
+   * 
+   * @warning It is assumed that the entity is contained in atleast one of the storages
+   * in the view. If this is not the case, the behaviour of this method in undefined.
+   * 
+   * @tparam I Archetype index used during recursion
+   * @tparam Invocable Invocable type (lambda)
+   * @param entity Entity to search and apply action for
+   * @param callable The callable to apply to storage and entity
+   */
+  template<size_t I, typename Callable>
+  void r_apply(const entity_type entity, const Callable& callable)
+  {
+    using current = at_t<I, archetype_list_view_type>;
+
+    auto& storage = _registry->template access<current>();
+
+    // If we assume that the entity is in atleast one of the storages in the view,
+    // we can skip the verification for the last possible storage.
+    if constexpr (I == size_v<archetype_list_view_type> - 1) callable(storage, entity);
+    else if (storage.contains(entity))
+      callable(storage, entity);
+    else
+      r_apply<I + 1, Callable>(entity, callable);
+  }
+
+  /**
+   * @brief Returns a reference of the stored component for the specified entity and component type.
+   * 
+   * This method uses recursion to iterate over every archetype in the view and checks
+   * what archetype storage the entity is contained in. Once the storage is found the desired
+   * component is unpacked and a reference is returned.
+   * 
+   * @warning Attempting to unpack an entity that is not in the view results in
+   * undefined behaviour
+   * 
+   * @tparam Component The component type to unpack
+   * @tparam I Archetype index used during recursion
+   * @param entity Entity to unpack component for
+   * @return Component& Reference to component belonging to the entity
+   */
+  template<typename Component, size_t I>
+  Component& r_unpack(const entity_type entity)
+  {
+    using current = at_t<I, archetype_list_view_type>;
+
+    auto& storage = _registry->template access<current>();
+
+    // If we assume that the entity is in atleast one of the storages in the view,
+    // we can skip the verification for the last possible storage.
+    if constexpr (I == size_v<archetype_list_view_type> - 1)
+      return storage.template unpack<Component>(entity);
+    else if (storage.contains(entity))
+      return storage.template unpack<Component>(entity);
+    else
+      return r_unpack<Component, I + 1>(entity);
+  }
+
+  /**
+   * @brief Returns whether or not the view contains the specified entity.
+   * 
+   * This method uses recursion to iterate over every archetype in the view to 
+   * and tries to find a storage that contains the entity.
+   * 
+   * @tparam I Archetype index used during recursion
+   * @param entity The entity to check for
+   * @return true If the view contains the entity
+   */
+  template<size_t I>
+  bool r_contains(const entity_type entity)
   {
     using current = at_t<I, archetype_list_view_type>;
 
@@ -395,57 +508,26 @@ public:
 
     if constexpr (I + 1 == size_v<archetype_list_view_type>) return false;
     else
-      return contains<I + 1>(entity);
+      return r_contains<I + 1>(entity);
   }
 
   /**
    * @brief Returns the amount of entities in the view.
    * 
-   * @note This method uses recusion to iterate over all the archetypes in the view.
+   * This method uses recursion to iterate over every archetype in the view to obtain
+   * the sum of sizes of storages.
    * 
-   * @tparam I Archetype index used during recursion, always leave it at 0
+   * @tparam I Archetype index used during recursion
    * @return size_t The amount of entities in the view
    */
-  template<size_t I = 0>
-  size_t size()
+  template<size_t I>
+  size_t r_size()
   {
     using current = at_t<I, archetype_list_view_type>;
 
     if constexpr (I == size_v<archetype_list_view_type>) return 0;
     else
-      return _registry->template access<current>().size() + size<I + 1>();
-  }
-
-private:
-  friend registry_type;
-
-  /**
-   * @brief Erases an entity from the correct storage in the view.
-   * 
-   * Used internally by the registry to destroy entities. Unsafe and cannot be used externally
-   * because this method removes an entity without releasing the entity back into
-   * the entity_manager.
-   * 
-   * @warning Attempting to erase an entity that doesn't exist in the view results
-   * in undefined behaviour
-   * 
-   * @note This method uses recusion to iterate over all the archetypes in the view.
-   * 
-   * @tparam I Archetype index used during recursion, always leave it at 0
-   * @param entity The entity to erase
-   */
-  template<size_t I = 0>
-  void erase(const entity_type entity)
-  {
-    using current = at_t<I, archetype_list_view_type>;
-
-    auto& storage = _registry->template access<current>();
-
-    if constexpr (I + 1 == size_v<archetype_list_view_type>) storage.erase(entity);
-    else if (storage.contains(entity))
-      storage.erase(entity);
-    else
-      erase<I + 1>(entity);
+      return _registry->template access<current>().size() + r_size<I + 1>();
   }
 
 private:

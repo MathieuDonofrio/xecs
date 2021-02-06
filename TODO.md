@@ -19,6 +19,7 @@ These tasks are small or large updates that are non breaking for non deprecated 
 - [ ] Replace malloc/new with better allocation
 - [ ] Ability to make an entity swap archetypes
 - [x] Compile-time archetype sorting for views
+- [ ] Allow omit entity from for_each argument
 - [ ] Archetype list generation from component list
 - [ ] Shared components
 - [ ] Static entities
