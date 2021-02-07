@@ -304,12 +304,14 @@ using prune_for_t = typename prune_for<ListOfLists, RequiredTypes...>::type;
 /**
  * @brief Assert's a component to verify that is is valid.
  * 
- * A valid component cannot be cv-qualified, that means it cant be const or volatile. And most importantly,
- * a component needs to be trivial, that means it cant contains constructors, destructors... EVERYTHING must
- * be trivial.
+ * A valid component cannot be cv-qualified, that means it cant be const or volatile. Also,
+ * in order to use the component in our containers, we need them to be default constructible,
+ * copy assignable and copy constructable.
  * 
- * Components must be strictly data. And we restrict at compile-time going beyond that.
- * These restrictions allows us to make some extra optimizations and enforces a performance by default philosophie.
+ * We allow components that are non-trival, however you should implement move schematics
+ * (move assignable & move constructable) for efficient use if your using pointers to heap data.
+ * 
+ * @note For the best performance, components should be a POD type (Plain old data).
  * 
  * @tparam Component The component to verify
  */
@@ -317,6 +319,9 @@ template<typename Component>
 struct verify_component
 {
   static_assert(std::is_same_v<Component, std::remove_cv_t<Component>>, "Component cannot be cv-qualified (const or volatile)");
+  static_assert(std::is_default_constructible_v<Component>, "Component must be default constructible");
+  static_assert(std::is_copy_assignable_v<Component>, "Component must be copy assignable");
+  static_assert(std::is_copy_constructible_v<Component>, "Component must be copy constructable");
 };
 
 template<typename... Components>

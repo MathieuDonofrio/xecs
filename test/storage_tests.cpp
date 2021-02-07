@@ -5,6 +5,35 @@
 
 using namespace xecs;
 
+struct NonTrivialDestructorOnly
+{
+  int* _destructor_counter;
+
+  ~NonTrivialDestructorOnly()
+  {
+    (*_destructor_counter)++;
+  }
+};
+
+struct NonTrivial
+{
+  int* _constructor_counter;
+  int* _destructor_counter;
+
+  NonTrivial() = default;
+
+  NonTrivial(int* constructor_counter, int* destructor_counter)
+    : _constructor_counter(constructor_counter), _destructor_counter(destructor_counter)
+  {
+    (*_constructor_counter)++;
+  }
+
+  ~NonTrivial()
+  {
+    (*_destructor_counter)++;
+  }
+};
+
 TEST(Storage, Empty_AfterInitialization_True)
 {
   using entity_type = unsigned int;
@@ -500,6 +529,84 @@ TEST(StorageWithData, Insert_NonTrivalTriggerGrowth)
   }
 
   ASSERT_FALSE(storage.contains(amount));
+}
+
+TEST(StorageWithData, Insert_NonTrivalDestructorOnly_CheckForLeaks)
+{
+  using entity_type = unsigned int;
+  using storage_type = storage<entity_type, archetype<NonTrivialDestructorOnly>>;
+
+  int destructor_count = 0;
+
+  entity_type insert_amount = 10000;
+
+  {
+    storage_type storage;
+
+    for (entity_type i = 0; i < insert_amount; i++)
+    {
+      NonTrivialDestructorOnly inserted { &destructor_count };
+
+      storage.insert(i, inserted);
+
+    } // Calls destructor
+
+    ASSERT_EQ(destructor_count, insert_amount);
+
+  } // Calls destructor
+
+  ASSERT_EQ(destructor_count, insert_amount * 2);
+}
+
+TEST(StorageWithData, Insert_NonTrival_CheckForLeaks)
+{
+  using entity_type = unsigned int;
+  using storage_type = storage<entity_type, archetype<NonTrivial>>;
+
+  int constructor_count = 0;
+  int destructor_count = 0;
+
+  entity_type insert_amount = 10000;
+
+  entity_type reinsert_amount = 500;
+
+  {
+    storage_type storage;
+
+    for (entity_type i = 0; i < insert_amount; i++)
+    {
+      NonTrivial inserted { &constructor_count, &destructor_count }; // Calls constructor
+
+      storage.insert(i, inserted); // Calls copy assignment
+
+    } // Calls destructor
+
+    ASSERT_GE(constructor_count, insert_amount);
+    ASSERT_EQ(destructor_count, insert_amount);
+
+    for (entity_type i = 0; i < reinsert_amount; i++)
+    {
+      storage.erase(i); // Calls destructor
+    }
+
+    ASSERT_GE(constructor_count, insert_amount);
+    ASSERT_EQ(destructor_count, insert_amount + reinsert_amount);
+
+    for (entity_type i = 0; i < reinsert_amount; i++)
+    {
+      NonTrivial inserted { &constructor_count, &destructor_count }; // Calls constructor
+
+      storage.insert(i, inserted); // Calls copy assignment
+
+    } // Calls destructor
+
+    ASSERT_GE(constructor_count, insert_amount + reinsert_amount);
+    ASSERT_EQ(destructor_count, insert_amount + reinsert_amount + reinsert_amount);
+
+  } // Calls destructor
+
+  ASSERT_GE(constructor_count, insert_amount + reinsert_amount);
+  ASSERT_EQ(destructor_count, insert_amount * 2 + reinsert_amount * 2);
 }
 
 TEST(StorageSharedSparseArray, Share_SingleStorage_Shared)

@@ -17,7 +17,7 @@ These tasks may be minor bug fixes or optimizations. They do not change the inte
 These tasks are small or large updates that are non breaking for non deprecated functionalities.
 
 - [x] Doxygen
-- [ ] Improve allocation (mostly for non-trivial)
+- [x] Improve allocation (mostly for non-trivial)
 - [x] Ability to make an entity swap archetypes
 - [x] Compile-time archetype sorting for views
 - [ ] Allow omit entity from for_each argument

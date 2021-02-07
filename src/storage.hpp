@@ -47,17 +47,15 @@ public:
    * @brief Construct a new sparse array object
    */
   sparse_array()
-    : _capacity(32), _shared(0)
-  {
-    _array = static_cast<array_type>(std::malloc(_capacity * sizeof(entity_type)));
-  }
+    : _array(NULL), _capacity(0), _shared(0)
+  {}
 
   /**
    * @brief Destroy the sparse array object
    */
   ~sparse_array()
   {
-    free(_array);
+    if (_array) free(_array);
   }
 
   sparse_array(const sparse_array&) = delete;
@@ -186,12 +184,14 @@ public:
    * @brief Construct a new storage object
    */
   storage()
-    : _size(0), _capacity(4)
+    : _size(0), _capacity(4) // Default must be bigger than 0
   {
+    // Uses new, but normally when using shared sparse arrays it will be allocated on the stack
     _sparse = new sparse_array<entity_type>();
 
+    // Allocating a minimum capacity can avoid a extra check in the contains method.
     _dense = static_cast<dense_type>(std::malloc(_capacity * sizeof(entity_type)));
-    (alloc_array<Components>(), ...);
+    (allocate<Components>(), ...);
   }
 
   /**
@@ -205,7 +205,7 @@ public:
       delete _sparse;
 
     free(_dense);
-    (free_array<Components>(), ...);
+    (deallocate<Components>(), ...);
   }
 
   storage(const storage&) = delete;
@@ -246,6 +246,9 @@ public:
 
     _dense[_size] = entity;
 
+    // Call the constructors if needed
+    (construct<Components>(_size), ...);
+
     ((access<IncludedComponents>()[_size] = components), ...);
 
     (*_sparse)[entity] = static_cast<entity_type>(_size++);
@@ -270,9 +273,12 @@ public:
     const auto index = (*_sparse)[entity];
 
     (*_sparse)[back_entity] = index;
-
     _dense[index] = back_entity;
 
+    // Call the destructors if needed
+    (destroy<Components>(index), ...);
+
+    // Moves the component data to the new location
     ((access<Components>()[index] = std::move(access<Components>()[_size])), ...);
   }
 
@@ -329,7 +335,7 @@ public:
       _capacity = _size;
 
       _dense = static_cast<dense_type>(std::realloc(_dense, _capacity * sizeof(entity_type)));
-      (realloc_array<Components>(), ...);
+      (reallocate<Components>(), ...);
     }
   }
 
@@ -425,64 +431,89 @@ private:
     _capacity = (_capacity * 3) / 2 + 8;
 
     _dense = static_cast<dense_type>(std::realloc(_dense, _capacity * sizeof(entity_type)));
-    (realloc_array<Components>(), ...);
-  }
 
-  /**
-   * @brief Resizes the dense array for the specfied component type to the current capacity.
-   * 
-   * Uses realloc if the component type is trivial, otherwise will use new and moves data using
-   * std::copy and move iterators.
-   * 
-   * @note Using realloc is faster.
-   * 
-   * @tparam Component The component type of the dense array to resize.
-   */
-  template<typename Component>
-  void realloc_array()
-  {
-    if constexpr (std::is_trivial_v<Component>)
-      access<Component>() = static_cast<Component*>(std::realloc(access<Component>(), _capacity * sizeof(Component)));
-    else
-    {
-      Component* new_array = new Component[_capacity];
-      std::copy(std::make_move_iterator(access<Component>()), std::make_move_iterator(access<Component>() + _size), new_array);
-      delete[] access<Component>();
-      access<Component>() = new_array;
-    }
-  }
-
-  /**
-   * @brief Allocates a new dense array for the specified component type.
-   * 
-   * Only used by the constructor.
-   * 
-   * @note Even if the default capacity is 0 this should be called.
-   * 
-   * @tparam Component The component type of the dense array to allocate.
-   */
-  template<typename Component>
-  void alloc_array()
-  {
-    if constexpr (std::is_trivial_v<Component>)
-      access<Component>() = static_cast<Component*>(std::malloc(_capacity * sizeof(Component)));
-    else
-      access<Component>() = new Component[_capacity];
+    (reallocate<Components>(), ...);
   }
 
   /**
    * @brief Deallocates the dense array for the specified component type.
    * 
-   * Only used by the destructor.
+   * Uses free under the hood. If the destructor is not trivial, it will call it 
+   * explicitly.
    * 
    * @tparam Component The component type of the dense array to deallocate.
    */
   template<typename Component>
-  void free_array()
+  void deallocate()
   {
-    if constexpr (std::is_trivial_v<Component>) free(access<Component>());
-    else
-      delete[] access<Component>();
+    if constexpr (!std::is_trivially_destructible_v<Component>)
+    {
+      for (size_t i = 0; i < _size; i++) (access<Component>() + i)->~Component();
+    }
+
+    free(access<Component>());
+  }
+
+  /**
+   * @brief Allocates a new dense array for the specified component type.
+   * 
+   * Uses malloc under the hood. If the constructor is not trivial, will call it will call it 
+   * explicitly.
+   * 
+   * @tparam Component The component type of the dense array to allocate.
+   */
+  template<typename Component>
+  void allocate()
+  {
+    access<Component>() = static_cast<Component*>(std::malloc(_capacity * sizeof(Component)));
+  }
+
+  /**
+   * @brief Resizes the dense array for the specfied component type to the current capacity.
+   * 
+   * Uses realloc under the hood. If the constructor is not trivial, will call it will call it 
+   * explicitly.
+   * 
+   * @tparam Component The component type of the dense array to resize.
+   */
+  template<typename Component>
+  void reallocate()
+  {
+    access<Component>() = static_cast<Component*>(std::realloc(access<Component>(), _capacity * sizeof(Component)));
+  }
+
+  /**
+   * @brief Calls the constructor on an component at the specified index.
+   * 
+   * Only calls the constructor if it is not trivial.
+   * 
+   * @tparam Component Component type to destroy
+   * @param index Index of component to destroy
+   */
+  template<typename Component>
+  void construct(const size_type index)
+  {
+    if constexpr (!std::is_trivially_constructible_v<Component>)
+    {
+      new (access<Component>() + index) Component(); // Default constructor
+    }
+  }
+
+  /**
+   * @brief Calls the destructor on an component at the specified index.
+   * 
+   * Only calls the destructor if it is not trivial.
+   * 
+   * @tparam Component Component type to destroy
+   * @param index Index of component to destroy
+   */
+  template<typename Component>
+  void destroy(const size_type index)
+  {
+    if constexpr (!std::is_trivially_destructible_v<Component>)
+    {
+      (access<Component>() + index)->~Component();
+    }
   }
 
   /**
