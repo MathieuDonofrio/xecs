@@ -302,19 +302,6 @@ template<typename ListOfLists, typename... RequiredTypes>
 using prune_for_t = typename prune_for<ListOfLists, RequiredTypes...>::type;
 
 /**
- * @brief Tries to place the closes list to the specified types in front.
- * 
- * This can allow certain operations to be made O(1).
- * 
- * @warning Does not do a compleate sort.
- * 
- * @tparam ListOfLists A List of lists arrange
- * @tparam Types Types that the lists of lists gets arranged for.
- */
-template<typename ListOfLists, typename... Types>
-struct optimize_order;
-
-/**
  * @brief Assert's a component to verify that is is valid.
  * 
  * A valid component cannot be cv-qualified, that means it cant be const or volatile. And most importantly,

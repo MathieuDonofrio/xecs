@@ -415,9 +415,9 @@ public:
    * @param Callable The callable to invoke on every iteration
    */
   template<typename Callable>
-  void for_each(const Callable& invocable)
+  void for_each(const Callable& callable)
   {
-    r_for_each<0, Callable>(invocable);
+    r_for_each<0, Callable>(callable);
   }
 
   /**
@@ -630,8 +630,6 @@ private:
     else
       return r_empty<I + 1>();
   }
-
-  // TODO r_empty
 
   /**
    * @brief Attempts to move component data into temp storage for transfer.
