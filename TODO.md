@@ -17,7 +17,7 @@ These tasks are small or large updates that are non breaking for non deprecated 
 
 - [x] Doxygen
 - [ ] Replace malloc/new with better allocation
-- [ ] Ability to make an entity swap archetypes
+- [x] Ability to make an entity swap archetypes
 - [x] Compile-time archetype sorting for views
 - [ ] Allow omit entity from for_each argument
 - [ ] Archetype list generation from component list
@@ -29,7 +29,7 @@ These tasks are small or large updates that are non breaking for non deprecated 
 
 These tasks are large updates with potentially breaking changes.
 
-- [ ] Replacement of archetype list for component list
+- [ ] Replacement of archetype list for component list?
 
 ## Experimental
 

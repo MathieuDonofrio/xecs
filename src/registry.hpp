@@ -53,9 +53,23 @@ public:
 
   static_assert(std::numeric_limits<entity_type>::is_integer && !std::numeric_limits<entity_type>::is_signed,
     "Entity type must be an unsigned integer");
+
   static_assert(sizeof...(Archetypes) > 0, "Registry must contain atleast one archetype");
 
 private:
+  /**
+   * @brief A registry view.
+   * 
+   * At compile-time the registry view will contain a reduced list of archetypes that 
+   * contain all the specified components.
+   * 
+   * You can do most of what you can do with a registry in a view, even the registry
+   * often uses views internaly. Operating directly on a view instead of registry can
+   * allow you more flexibility for compile-time optimizations. Registry operations are
+   * more for simplicity and view operations are more for speed.
+   * 
+   * @tparam Components The components to be included in the view.
+   */
   template<typename... Components>
   class basic_view;
 
@@ -68,6 +82,9 @@ public:
     setup_shared_memory();
   }
 
+  /**
+   * @brief Destroy the registry object
+   */
   ~registry()
   {}
 
@@ -111,8 +128,8 @@ public:
    * of archetypes. This complexity can be compleatly or partially reduced by specifying
    * all or some of the types of the entity's archetype. You should probably be doing this.
    * 
-   * @warning Attempting to destroy an entity that doesn't exist in the view results
-   * in undefined behaviour
+   * @warning Attempting to destroy an entity that does not contains all specified components
+   * will result in undefined behaviour.
    * 
    * @tparam Components Component types that you know this entity's archetype has
    * @param entity The entity to destroy
@@ -169,6 +186,18 @@ public:
    */
   template<typename... Components, typename Callable>
   void for_each(const Callable& callable) { view<Components...>().for_each(callable); }
+
+  /**
+   * @brief Will change the archetype of an entity.
+   * 
+   * Common components between archetypes will be moved, other components
+   *  will be untouched/uninitialized.
+   * 
+   * @tparam SwapComponents The components of the archetype to swap to
+   * @param entity The entity to swap archetype for
+   */
+  template<typename... Components>
+  void swap_archetype(const entity_type entity) { view().template swap_archetype<Components...>(entity); }
 
   /**
    * @brief Returns a reference of the stored component for the specified entity and component type.
@@ -311,7 +340,47 @@ public:
   static_assert(size_v<archetype_list_view_type> > 0, "There are no archetypes in this view");
 
 public:
+  /**
+   * @brief Construct a new basic view object
+   * 
+   * @param registry Registry to view
+   */
   explicit basic_view(registry_type* registry) : _registry { registry } {}
+
+  /**
+   * @brief Will change the archetype of an entity.
+   * 
+   * Common components between archetypes will be moved, other components
+   *  will be untouched/uninitialized.
+   * 
+   * @warning Attempting to swap archetypes of an entity that doesn't exist in the view results
+   * in undefined behaviour.
+   * 
+   * @note This may be possible to optimize more in the future by making
+   * transfer native to storage.
+   * 
+   * @tparam SwapComponents The components of the archetype to swap to
+   * @param entity The entity to swap archetype for
+   */
+  template<typename... SwapComponents>
+  void swap_archetype(const entity_type entity)
+  {
+    static_assert(size_v<prune_for_t<archetype_list_type, SwapComponents...>> > 0,
+      "The archetype to swap to does not exist.");
+
+    using new_archetype = archetype<SwapComponents...>;
+
+    r_apply<0>(entity, [this](auto& s, const entity_type e)
+      {
+        std::tuple<SwapComponents...> temp;
+        ((try_transfer<SwapComponents>(e, s, temp)), ...);
+
+        s.erase(e);
+
+        _registry->template access<new_archetype>()
+          .insert(e, std::move(std::get<SwapComponents>(temp))...);
+      });
+  }
 
   /**
    * @brief Erases an entity from the correct storage in the view.
@@ -328,8 +397,8 @@ public:
    */
   void destroy(const entity_type entity)
   {
-    r_apply<0>(entity, [](auto& storage, const entity_type e)
-      { storage.erase(e); });
+    r_apply<0>(entity, [](auto& s, const entity_type e)
+      { s.erase(e); });
 
     _registry->_manager.release(entity);
   }
@@ -396,7 +465,8 @@ public:
   }
 
 private:
-  friend registry_type;
+  // A lot of internal methods use recursion for types. These methods are made private
+  // to avoid using them in wrong way. Safe wrapper methods are public.
 
   /**
    * @brief Iterates over every entity that has the specified components and calls the given function.
@@ -528,6 +598,29 @@ private:
     if constexpr (I == size_v<archetype_list_view_type>) return 0;
     else
       return _registry->template access<current>().size() + r_size<I + 1>();
+  }
+
+  // TODO r_empty
+
+  /**
+   * @brief Attempts to move component data into temp storage for transfer.
+   * 
+   * Used internally as utility.
+   * 
+   * @tparam Component Component type to try to move
+   * @tparam Storage Storage type
+   * @tparam Tuple Temp storage tuple type
+   * @param entity Entity to move component for
+   * @param storage Storage to move component from
+   * @param temp Temp storage to move component into
+   */
+  template<typename Component, typename Storage, typename Tuple>
+  void try_transfer(const entity_type entity, Storage& storage, Tuple& temp)
+  {
+    if constexpr (storage.contains_component<Component>)
+    {
+      std::get<Component>(temp) = std::move(storage.template unpack<Component>(entity));
+    }
   }
 
 private:

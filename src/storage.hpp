@@ -167,6 +167,9 @@ public:
   using entity_type = Entity;
   using size_type = size_t;
 
+  template<typename Component>
+  static constexpr bool contains_component = contains_v<Component, list<Components...>>;
+
 private:
   using dense_type = entity_type*;
   using page_type = entity_type*;
@@ -562,9 +565,6 @@ public:
   template<typename Component>
   [[nodiscard]] const Component& unpack() const
   {
-    static_assert(contains_v<Component, list<Components...>>,
-      "The component your trying to unpack does not belong to the archetype");
-
     return _ptr->access<Component>()[_pos];
   }
 

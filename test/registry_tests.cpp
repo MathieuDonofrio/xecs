@@ -468,6 +468,56 @@ TEST(Registry, Unpack_SetWithMultipleArchetypes_SameValues)
   ASSERT_EQ(registry.unpack<float>(entity2), 0.5f);
 }
 
+TEST(Registry, SwapArchetype_SingleCommonComponent_Moved)
+{
+  using entity_type = unsigned int;
+  using registered_archetypes = archetype_list_builder::
+    add<archetype<int>>::
+      add<archetype<int, float>>::
+        build;
+
+  registry<entity_type, registered_archetypes> registry;
+
+  auto entity = registry.create(5);
+
+  ASSERT_EQ(registry.size(), 1);
+  ASSERT_EQ((registry.size<int, float>()), 0);
+
+  registry.swap_archetype<int, float>(entity);
+
+  ASSERT_EQ(registry.size(), 1);
+  ASSERT_EQ((registry.size<int, float>()), 1);
+  ASSERT_EQ(registry.unpack<int>(entity), 5);
+}
+
+TEST(Registry, SwapArchetype_SingleCommonComponent_SwapedBack)
+{
+  using entity_type = unsigned int;
+  using registered_archetypes = archetype_list_builder::
+    add<archetype<int>>::
+      add<archetype<int, float>>::
+        build;
+
+  registry<entity_type, registered_archetypes> registry;
+
+  auto entity = registry.create(5);
+
+  ASSERT_EQ(registry.size(), 1);
+  ASSERT_EQ((registry.size<int, float>()), 0);
+
+  registry.swap_archetype<int, float>(entity);
+
+  ASSERT_EQ(registry.size(), 1);
+  ASSERT_EQ((registry.size<int, float>()), 1);
+  ASSERT_EQ(registry.unpack<int>(entity), 5);
+
+  registry.swap_archetype<int>(entity);
+
+  ASSERT_EQ(registry.size(), 1);
+  ASSERT_EQ((registry.size<int, float>()), 0);
+  ASSERT_EQ(registry.unpack<int>(entity), 5);
+}
+
 TEST(Registry, ForEach_Single_SameValues)
 {
   using entity_type = unsigned int;
