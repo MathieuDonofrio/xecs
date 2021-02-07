@@ -10,13 +10,14 @@ These tasks may be minor bug fixes or optimizations. They do not change the inte
 
 - [x] Runtime library bug with CMake and MSVC 
 - [x] Test build error in WSL Ubuntu
+- [x] Bug with contains method
 
 ## Minor
 
 These tasks are small or large updates that are non breaking for non deprecated functionalities.
 
 - [x] Doxygen
-- [ ] Replace malloc/new with better allocation
+- [ ] Improve allocation (mostly for non-trivial)
 - [x] Ability to make an entity swap archetypes
 - [x] Compile-time archetype sorting for views
 - [ ] Allow omit entity from for_each argument

@@ -51,6 +51,16 @@ TEST(Storage, Contains_WithValue_True)
   ASSERT_TRUE(storage.contains(0));
 }
 
+TEST(Storage, Contains_LargeUninsertedValue_False)
+{
+  using entity_type = unsigned int;
+  using storage_type = storage<entity_type, archetype<>>;
+
+  storage_type storage;
+
+  ASSERT_FALSE(storage.contains(1000000));
+}
+
 TEST(Storage, Erase_Single_SizeDecrease)
 {
   using entity_type = unsigned int;

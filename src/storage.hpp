@@ -290,7 +290,7 @@ public:
 
     // We must access the dense array here because our sparse arrays may be shared, therefor we need
     // to make sure entity index is valid.
-    return (index = (*_sparse)[entity]) < _size && _dense[index] == entity;
+    return entity < _sparse->capacity() && (index = (*_sparse)[entity]) < _size && _dense[index] == entity;
   }
 
   /**
