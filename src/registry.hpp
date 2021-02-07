@@ -163,7 +163,7 @@ public:
    * 
    * This can be quite expensive to call often. Not recommended to call every frame.
    * However, every once in a while, it can be usefull to call this method in a clever way
-   * to recalibrate everything and make sure your ressources are being use optimally.
+   * to make sure your ressources are being use optimally.
    * 
    * @note You should consider using this if your application is running for a long time.
    */
@@ -255,13 +255,13 @@ public:
    * 
    * If no components are specified, this will return whether or not the registry contains ANY entities.
    * 
-   * @note Uses the registry size method under the hood.
+   * @note The more components are specified, the faster this method becomes.
    * 
    * @tparam Components The required components to be counted in the check
    * @return true If the registry contains any entities that have the specified components.
    */
   template<typename... Components>
-  bool empty() { return size<Components...>() == 0; }
+  bool empty() { return view<Components...>().empty(); }
 
   /**
    * @brief Returns a view of the registry for the specified components.
@@ -464,6 +464,16 @@ public:
     return r_size<0>();
   }
 
+  /**
+   * @brief Returns whether or not the view is empty
+   * 
+   * @return bool True if the view is empty, false otherwise
+   */
+  bool empty()
+  {
+    return r_empty<0>();
+  }
+
 private:
   // A lot of internal methods use recursion for types. These methods are made private
   // to avoid using them in wrong way. Safe wrapper methods are public.
@@ -598,6 +608,27 @@ private:
     if constexpr (I == size_v<archetype_list_view_type>) return 0;
     else
       return _registry->template access<current>().size() + r_size<I + 1>();
+  }
+
+  /**
+   * @brief Returns whether or not the view is empty
+   * 
+   * This method uses recursion to iterate over every archetype in the view and checks
+   * if the storage is empty.
+   * 
+   * @tparam I Archetype index used during recursion
+   * @return bool True if the view is empty, false otherwise
+   */
+  template<size_t I>
+  bool r_empty()
+  {
+    using current = at_t<I, archetype_list_view_type>;
+
+    if constexpr (I == size_v<archetype_list_view_type>) return true;
+    else if (!_registry->template access<current>().empty())
+      return false;
+    else
+      return r_empty<I + 1>();
   }
 
   // TODO r_empty
