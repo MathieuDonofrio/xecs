@@ -646,10 +646,18 @@ private:
   template<typename Component, typename Storage, typename Tuple>
   void try_transfer(const entity_type entity, Storage& storage, Tuple& temp)
   {
-    if constexpr (storage.contains_component<Component>)
+#if _MSC_VER
+    constexpr bool allow = storage.contains_component<Component>;
+#else
+    constexpr bool allow = storage.template contains_component<Component>;
+#endif
+
+    if constexpr (allow)
     {
       std::get<Component>(temp) = std::move(storage.template unpack<Component>(entity));
     }
+    else
+      (void)entity; // Suppress unused warning
   }
 
 private:

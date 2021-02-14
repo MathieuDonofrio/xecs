@@ -30,11 +30,12 @@ These tasks are small or large updates that are non breaking for non deprecated 
 
 These tasks are large updates with potentially breaking changes.
 
-- [ ] Replacement of archetype list for component list?
+- [ ] Runtime reflection system
 
 ## Experimental
 
 These tasks are experiments to be done in the experimental branch.
 
+- [ ] Type erasure
 - [ ] Entity id's with extra storage bits (versions?)
 - [ ] Native Serialization

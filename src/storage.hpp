@@ -184,14 +184,13 @@ public:
    * @brief Construct a new storage object
    */
   storage()
-    : _size(0), _capacity(4) // Default must be bigger than 0
+    : _dense(NULL), _size(0), _capacity(0)
   {
     // Uses new, but normally when using shared sparse arrays it will be allocated on the stack
     _sparse = new sparse_array<entity_type>();
 
-    // Allocating a minimum capacity can avoid a extra check in the contains method.
-    _dense = static_cast<dense_type>(std::malloc(_capacity * sizeof(entity_type)));
-    (allocate<Components>(), ...);
+    // Allocate nothing by default
+    ((access<Components>() = NULL), ...);
   }
 
   /**
@@ -204,8 +203,13 @@ public:
     else
       delete _sparse;
 
-    free(_dense);
-    (deallocate<Components>(), ...);
+    // We assume that if dense is NULL, the other arrays are NULL since
+    // they grow together.
+    if (_dense)
+    {
+      free(_dense);
+      (deallocate<Components>(), ...);
+    }
   }
 
   storage(const storage&) = delete;
@@ -427,11 +431,11 @@ private:
   void grow()
   {
     // This is essentially _capacity * 1.5 + 8
-    // There may be a better way to grow
+    // Note: Must try to find optimal growth rate for better reallocation
     _capacity = (_capacity * 3) / 2 + 8;
 
+    // Grow all arrays together
     _dense = static_cast<dense_type>(std::realloc(_dense, _capacity * sizeof(entity_type)));
-
     (reallocate<Components>(), ...);
   }
 
@@ -448,24 +452,13 @@ private:
   {
     if constexpr (!std::is_trivially_destructible_v<Component>)
     {
-      for (size_t i = 0; i < _size; i++) (access<Component>() + i)->~Component();
+      for (size_t i = 0; i < _size; i++)
+      {
+        access<Component>()[i].~Component();
+      }
     }
 
     free(access<Component>());
-  }
-
-  /**
-   * @brief Allocates a new dense array for the specified component type.
-   * 
-   * Uses malloc under the hood. If the constructor is not trivial, will call it will call it 
-   * explicitly.
-   * 
-   * @tparam Component The component type of the dense array to allocate.
-   */
-  template<typename Component>
-  void allocate()
-  {
-    access<Component>() = static_cast<Component*>(std::malloc(_capacity * sizeof(Component)));
   }
 
   /**
@@ -474,12 +467,39 @@ private:
    * Uses realloc under the hood. If the constructor is not trivial, will call it will call it 
    * explicitly.
    * 
+   * @note If the array is NULL, behaviour will be the same as malloc.
+   * 
    * @tparam Component The component type of the dense array to resize.
    */
   template<typename Component>
   void reallocate()
   {
-    access<Component>() = static_cast<Component*>(std::realloc(access<Component>(), _capacity * sizeof(Component)));
+    if(std::is_trivially_copyable_v<Component> || std::is_trivially_move_assignable_v<Component>)
+    {
+      access<Component>() = static_cast<Component*>(std::realloc(access<Component>(), _capacity * sizeof(Component)));
+    }
+    else
+    {
+      Component* old_array = access<Component>();
+
+      Component* new_array = static_cast<Component*>(std::malloc(_capacity * sizeof(Component)));
+
+      for(size_t i = 0; i < _size; i++)
+      {
+        if constexpr (!std::is_trivially_constructible_v<Component>)
+        {
+          new (new_array + i) Component(); 
+        }
+        
+        new_array[i] = std::move(old_array[i]);
+
+        old_array[i].~Component();
+      }
+
+      free(old_array);
+
+      access<Component>() = new_array;
+    }
   }
 
   /**
@@ -497,6 +517,8 @@ private:
     {
       new (access<Component>() + index) Component(); // Default constructor
     }
+    else
+      (void)index; // Suppress unused warning
   }
 
   /**
@@ -512,8 +534,10 @@ private:
   {
     if constexpr (!std::is_trivially_destructible_v<Component>)
     {
-      (access<Component>() + index)->~Component();
+      access<Component>()[index].~Component();
     }
+    else
+      (void)index; // Suppress unused warning
   }
 
   /**

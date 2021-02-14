@@ -11,7 +11,7 @@ if(MSVC)
   )
 else()
   add_compile_options(
-    -Wall -Wextra -Wpedantic
+    -Wall -Wextra -Wpedantic -Wno-class-memaccess
     $<$<CONFIG:Debug>:-O0>
     $<$<CONFIG:Release>:-O3>
   )
