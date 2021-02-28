@@ -2,6 +2,7 @@
 #define XECS_STORAGE_HPP
 
 #include "archetype.hpp"
+#include "container.hpp"
 
 #include <cassert>
 #include <cstdlib>
@@ -172,7 +173,7 @@ private:
   using dense_type = entity_type*;
   using page_type = entity_type*;
   using sparse_type = sparse_array<Entity>*;
-  using component_pool_type = std::tuple<Components*...>;
+  using component_pool_type = container<Components...>;
 
   static_assert(std::numeric_limits<entity_type>::is_integer && !std::numeric_limits<entity_type>::is_signed,
     "Entity type must be an unsigned integer");
@@ -184,13 +185,10 @@ public:
    * @brief Construct a new storage object
    */
   storage()
-    : _dense(NULL), _size(0), _capacity(0)
+    : _dense(NULL)
   {
     // Uses new, but normally when using shared sparse arrays it will be allocated on the stack
     _sparse = new sparse_array<entity_type>();
-
-    // Allocate nothing by default
-    ((access<Components>() = NULL), ...);
   }
 
   /**
@@ -203,13 +201,7 @@ public:
     else
       delete _sparse;
 
-    // We assume that if dense is NULL, the other arrays are NULL since
-    // they grow together.
-    if (_dense)
-    {
-      free(_dense);
-      (deallocate<Components>(), ...);
-    }
+    if (_dense) free(_dense);
   }
 
   storage(const storage&) = delete;
@@ -245,17 +237,13 @@ public:
     static_assert(unique_types_v<IncludedComponents...>,
       "Included components are not unique");
 
-    if (_size == _capacity) grow();
+    if (size() == capacity()) grow();
     _sparse->assure(entity);
 
-    _dense[_size] = entity;
+    _dense[size()] = entity;
+    (*_sparse)[entity] = static_cast<entity_type>(size());
 
-    // Call the constructors if needed
-    (construct<Components>(_size), ...);
-
-    ((access<IncludedComponents>()[_size] = components), ...);
-
-    (*_sparse)[entity] = static_cast<entity_type>(_size++);
+    _pool.push_back(components...);
   }
 
   /**
@@ -273,17 +261,13 @@ public:
    */
   void erase(const entity_type entity)
   {
-    const auto back_entity = _dense[--_size];
+    const auto back_entity = _dense[size() - 1];
     const auto index = (*_sparse)[entity];
 
     (*_sparse)[back_entity] = index;
     _dense[index] = back_entity;
 
-    // Call the destructors if needed
-    (destroy<Components>(index), ...);
-
-    // Moves the component data to the new location
-    ((access<Components>()[index] = std::move(access<Components>()[_size])), ...);
+    _pool.erase(index);
   }
 
   /**
@@ -300,7 +284,7 @@ public:
 
     // We must access the dense array here because our sparse arrays may be shared, therefor we need
     // to make sure entity index is valid.
-    return entity < _sparse->capacity() && (index = (*_sparse)[entity]) < _size && _dense[index] == entity;
+    return entity < _sparse->capacity() && (index = (*_sparse)[entity]) < size() && _dense[index] == entity;
   }
 
   /**
@@ -322,7 +306,7 @@ public:
     static_assert(contains_v<Component, list<Components...>>,
       "The component your trying to unpack does not belong to the archetype");
 
-    return access<Component>()[(*_sparse)[entity]];
+    return _pool.template access<Component>()[(*_sparse)[entity]];
   }
 
   /**
@@ -334,12 +318,10 @@ public:
    */
   void shrink_to_fit()
   {
-    if (_size != _capacity)
+    if (size() != capacity())
     {
-      _capacity = _size;
-
-      _dense = static_cast<dense_type>(std::realloc(_dense, _capacity * sizeof(entity_type)));
-      (reallocate<Components>(), ...);
+      _pool.shrink_to_fit();
+      _dense = static_cast<dense_type>(std::realloc(_dense, capacity() * sizeof(entity_type)));
     }
   }
 
@@ -356,7 +338,7 @@ public:
    */
   void share(sparse_type sparse)
   {
-    if (_size != 0) return;
+    if (size() != 0) return;
 
     if (_sparse->shared()) _sparse->unshare();
     else
@@ -373,7 +355,7 @@ public:
    * 
    * As cheap of an operation as you can get (sets size to zero).
    */
-  void clear() { _size = 0; }
+  void clear() { _pool.clear(); }
 
   /**
    * @brief Returns an iterator of the first entity of the dense array.
@@ -382,7 +364,7 @@ public:
    * 
    * @return iterator Dense array iterator begining
    */
-  iterator begin() { return { this, _size - 1 }; }
+  iterator begin() { return { this, size() - 1 }; }
 
   /**
    * @brief Returns an iterator at the last entity of the dense array.
@@ -398,7 +380,7 @@ public:
    * 
    * @return size_type Amount of entities currently in storage
    */
-  [[nodiscard]] size_type size() const { return _size; }
+  [[nodiscard]] size_type size() const { return _pool.size(); }
 
   /**
    * @brief Returns the current entity capacity of the storage.
@@ -408,7 +390,7 @@ public:
    * 
    * @return size_type Current capacity of entities in storage
    */
-  [[nodiscard]] size_type capacity() const { return _capacity; }
+  [[nodiscard]] size_type capacity() const { return _pool.capacity(); }
 
   /**
    * @brief Returns whether or not the storage is empty.
@@ -418,7 +400,7 @@ public:
    * 
    * @return true If the storage is empty, false otherwise
    */
-  [[nodiscard]] bool empty() const { return _size == 0; }
+  [[nodiscard]] bool empty() const { return _pool.empty(); }
 
 private:
   /**
@@ -431,139 +413,17 @@ private:
   void grow()
   {
     // This is essentially _capacity * 1.5 + 8
-    // Note: Must try to find optimal growth rate for better reallocation
-    _capacity = (_capacity * 3) / 2 + 8;
+    const size_t capacity = (_pool.capacity() * 3) / 2 + 8;
 
     // Grow all arrays together
-    _dense = static_cast<dense_type>(std::realloc(_dense, _capacity * sizeof(entity_type)));
-    (reallocate<Components>(), ...);
-  }
-
-  /**
-   * @brief Deallocates the dense array for the specified component type.
-   * 
-   * Uses free under the hood. If the destructor is not trivial, it will call it 
-   * explicitly.
-   * 
-   * @tparam Component The component type of the dense array to deallocate.
-   */
-  template<typename Component>
-  void deallocate()
-  {
-    if constexpr (!std::is_trivially_destructible_v<Component>)
-    {
-      for (size_t i = 0; i < _size; i++)
-      {
-        access<Component>()[i].~Component();
-      }
-    }
-
-    free(access<Component>());
-  }
-
-  /**
-   * @brief Resizes the dense array for the specfied component type to the current capacity.
-   * 
-   * Uses realloc under the hood. If the constructor is not trivial, will call it will call it 
-   * explicitly.
-   * 
-   * @note If the array is NULL, behaviour will be the same as malloc.
-   * 
-   * @tparam Component The component type of the dense array to resize.
-   */
-  template<typename Component>
-  void reallocate()
-  {
-    if(std::is_trivially_copyable_v<Component> || std::is_trivially_move_assignable_v<Component>)
-    {
-      access<Component>() = static_cast<Component*>(std::realloc(access<Component>(), _capacity * sizeof(Component)));
-    }
-    else
-    {
-      Component* old_array = access<Component>();
-
-      Component* new_array = static_cast<Component*>(std::malloc(_capacity * sizeof(Component)));
-
-      for(size_t i = 0; i < _size; i++)
-      {
-        if constexpr (!std::is_trivially_constructible_v<Component>)
-        {
-          new (new_array + i) Component(); 
-        }
-        
-        new_array[i] = std::move(old_array[i]);
-
-        old_array[i].~Component();
-      }
-
-      free(old_array);
-
-      access<Component>() = new_array;
-    }
-  }
-
-  /**
-   * @brief Calls the constructor on an component at the specified index.
-   * 
-   * Only calls the constructor if it is not trivial.
-   * 
-   * @tparam Component Component type to destroy
-   * @param index Index of component to destroy
-   */
-  template<typename Component>
-  void construct(const size_type index)
-  {
-    if constexpr (!std::is_trivially_constructible_v<Component>)
-    {
-      new (access<Component>() + index) Component(); // Default constructor
-    }
-    else
-      (void)index; // Suppress unused warning
-  }
-
-  /**
-   * @brief Calls the destructor on an component at the specified index.
-   * 
-   * Only calls the destructor if it is not trivial.
-   * 
-   * @tparam Component Component type to destroy
-   * @param index Index of component to destroy
-   */
-  template<typename Component>
-  void destroy(const size_type index)
-  {
-    if constexpr (!std::is_trivially_destructible_v<Component>)
-    {
-      access<Component>()[index].~Component();
-    }
-    else
-      (void)index; // Suppress unused warning
-  }
-
-  /**
-   * @brief Accesses the component dense array for the specified component type.
-   * 
-   * @note Uses the tuple std::get method.
-   * 
-   * @tparam Component Type of component to access dense array for.
-   * @return Component*& Dense array of component
-   */
-  template<typename Component>
-  Component*& access()
-  {
-    static_assert(contains_v<Component, list<Components...>>,
-      "The component type your trying to access does not belong to the archetype");
-
-    return std::get<Component*>(_pool);
+    _dense = static_cast<dense_type>(std::realloc(_dense, capacity * sizeof(entity_type)));
+    _pool.reserve(capacity);
   }
 
 private:
   dense_type _dense;
   sparse_type _sparse;
   component_pool_type _pool;
-
-  size_type _size;
-  size_type _capacity;
 };
 
 template<typename Entity, typename... Components>
@@ -620,7 +480,7 @@ public:
   template<typename Component>
   [[nodiscard]] const Component& unpack() const
   {
-    return _ptr->access<Component>()[_pos];
+    return _ptr->_pool.template access<Component>()[_pos];
   }
 
   /*! @copydoc unpack */
