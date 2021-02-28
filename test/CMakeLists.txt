@@ -22,6 +22,6 @@ add_library(GTest::Main ALIAS gtest_main)
 target_compile_features(gtest PUBLIC cxx_std_17)
 target_compile_features(gtest_main PUBLIC cxx_std_17)
 
-add_executable(tests tests.cpp archetype_tests.cpp storage_tests.cpp entity_manager_tests.cpp registry_tests.cpp)
+add_executable(tests tests.cpp archetype_tests.cpp storage_tests.cpp entity_manager_tests.cpp registry_tests.cpp container_tests.cpp type_map_tests.cpp context_tests.cpp)
 target_link_libraries(tests PRIVATE XECS GTest::Main Threads::Threads)
 add_test(NAME tests COMMAND tests)
