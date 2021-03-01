@@ -25,9 +25,9 @@ namespace internal
 #endif
   }
 
-  constexpr auto prober = function_name<void>();
-  constexpr auto start = prober.find("void");
-  constexpr auto offset = prober.length() - 4;
+  constexpr auto void_prober = function_name<void>();
+  constexpr auto start = void_prober.find("void");
+  constexpr auto offset = void_prober.length() - 4;
 
   template<typename Type>
   constexpr std::string_view type_name()
@@ -51,9 +51,9 @@ namespace internal
     return n > 0 ? hash(n - 1, string + 1, (h ^ *string) * prime) : h;
   }
 
-  constexpr size_t hash(const std::string_view view)
+  constexpr uint32_t hash(const std::string_view view)
   {
-    return hash(view.length() - 1, view.data());
+    return static_cast<uint32_t>(hash(view.length() - 1, view.data()));
   }
 
 } // namespace internal
@@ -63,7 +63,7 @@ struct type_id
 {
   static constexpr std::string_view name() { return internal::type_name<Type>(); }
 
-  static constexpr size_t index() { return internal::hash(name()); }
+  static constexpr uint32_t index() { return internal::hash(name()); }
 };
 
 namespace internal
@@ -138,8 +138,6 @@ namespace internal
     using type = std::conditional_t<swap, Sorted<SortedTypes..., T2, T1>, Sorted<SortedTypes..., T1, T2>>;
   };
 
-  // TODO Optimize sort for 3 types
-
   template<typename... SortedTypes, template<typename...> class Sorted, typename T1, typename T2, typename T3, typename... Types, template<typename...> class Unsorted>
   struct sort_into<Sorted<SortedTypes...>, Unsorted<T1, T2, T3, Types...>>
   {
@@ -151,13 +149,13 @@ namespace internal
     using type = typename sort_into<next_sorted, next_unsorted>::type;
   };
 
-}; // namespace internal
+  template<typename... Types>
+  struct combined
+  {
+    using sorted_t = typename internal::sort_into<combined<>, combined<Types...>>::type;
+  };
 
-template<typename... Types>
-struct combined
-{
-  using sorted = typename internal::sort_into<combined<>, combined<Types...>>::type;
-};
+}; // namespace internal
 
 } // namespace xecs
 
