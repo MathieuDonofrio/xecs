@@ -1,4 +1,4 @@
-![Banner](https://user-images.githubusercontent.com/49959920/104272813-f2ff8d00-546b-11eb-8128-90c5ef943f14.png)
+# XECS
 
 [![Build Status](https://github.com/MathieuDonofrio/xecs/workflows/build/badge.svg)](https://github.com/MathieuDonofrio/xecs/actions)
 [![Code Coverage](https://codecov.io/gh/MathieuDonofrio/xecs/branch/master/graph/badge.svg?token=1KD29OJ244)](https://codecov.io/gh/MathieuDonofrio/xecs)
@@ -6,7 +6,7 @@
 
 `XECS` is a small but powerfull, header-only entity-component system that uses **compile-time archetypes** written in **modern c++**. 
 
-# Table of Contents
+## Table of Contents
 
 * [Introduction](#introduction)
   * [Motivation](#implementation)
@@ -16,7 +16,7 @@
   * [Tutorial](#tutorial)
 * [Build Instructions](#build-instructions)
 
-# Introduction
+## Introduction
 
 Entity–component–system (ECS) is an architectural pattern used to build high performance applications such as games or simulations. This pattern is usually a combination the following two philosophies:
 
@@ -29,7 +29,7 @@ For further details:
 
 * ECS: [ECS Wikipedia](https://en.wikipedia.org/wiki/Entity_component_system)
 
-## Performance
+### Performance
 
 Performance is a huge part of this project. I have fairly benchmarked against some of the most known and powerfull open-source ECS libraries and I can say with pretty good confidence that this library is very efficient. Not just in terms of speed but also in memory. 
 
@@ -39,17 +39,9 @@ This library performs very well generally, but where it shines the most is when 
 
 More memory for more speed is a typical tradeoff in most ECS implementations, however clever compile-time optimizations make this implementation have very little memory overhead. For an entity with any given archetype, the memory cost of storing it is: 2 * (size of entity identifier) + (size of all components in the archetype).
 
-## Motivation
+## Code Examples
 
-I have many motivations for writing and maintaining this library, notably for the fun, the learning experience and the future projects that will depend on this.
-
-My goal for this project is to provide a simple but powerfull implementation. As of writing this, the project is less than 2000 lines of code with the documentation, all contained in just a handful of header files. The library must be simple, but not at the cost of performance.
-
-Altho there is still work to be done, I believe that I have accomplished my goals reasonably quite well. I am proud of my implementation thus far, so I have open-sourced it and hope that it will help others make high-performance applications or learn about ECS.
-
-# Code Examples
-
-## Tutorial
+### Tutorial
 
 <details>
 <summary>Include</summary>
@@ -197,9 +189,9 @@ view.for_each([](const auto entity, const auto& position, const auto& velocity)
 
 </details>
 
-# Build Instructions
+## Build Instructions
 
-## Requirements
+### Requirements
 
 To be able to use `XECS` you must have a standard compliant compiler that supports at least C++17.
 
@@ -215,13 +207,13 @@ The following platforms and compilers are continously tested to work:
 * MacOS
   * default
 
-## Library
+### Library
 
 `XECS` is a header-only library. All you need to do is include the headers.
 
 The simplest way would be to simply add the single header file `single/xecs.hpp` to your project.
 
-## Tests
+### Tests
 
 `googletest` is used as our testing framework. CMake will sets all this up for you.
 
@@ -247,7 +239,7 @@ The cmake option `XECS_BUILD_TESTING` is used to determine if testing will be bu
 
 </details>
 
-## Benchmarks
+### Benchmarks
 
 No dependancies are used for benchmarking.
 
